@@ -13,7 +13,15 @@ class GoogleDriveLinkLegacy extends Command
         {--pembayaran-folder=1WE90N21kPPUwBLo2Qc3YPlvImn96avnK : ID folder Drive "BerkasPembayaran" (AppSheet lama)}
         {--apply : Simpan hasil pencocokan ke database. Tanpa opsi ini, cuma preview (dry-run).}';
 
-    protected $description = 'Cocokkan subfolder mahasiswa yang sudah ada di Google Drive (bekas AppSheet) ke record mahasiswa, tanpa upload ulang file';
+    protected $description = 'Cocokkan subfolder & file mahasiswa yang sudah ada di Google Drive (bekas AppSheet) ke record mahasiswa, tanpa upload ulang file';
+
+    private const BERKAS_TYPE_COLUMNS = [
+        'IJAZAH' => 'ijazah_drive_url',
+        'TRANSKRIP' => 'transkrip_awal_drive_url',
+        'KTP' => 'ktp_drive_url',
+        'KK' => 'kk_drive_url',
+        'FOTO' => 'pas_foto_drive_url',
+    ];
 
     public function handle(GoogleDriveService $googleDrive): int
     {
@@ -23,7 +31,9 @@ class GoogleDriveLinkLegacy extends Command
             return self::FAILURE;
         }
 
-        $mahasiswas = Mahasiswa::query()->get(['id', 'nama_mahasiswa', 'kode_pmb', 'google_drive_folder_id', 'google_drive_pembayaran_folder_id']);
+        $mahasiswas = Mahasiswa::query()
+            ->with(['berkas', 'pembayarans'])
+            ->get(['id', 'nama_mahasiswa', 'kode_pmb', 'google_drive_folder_id', 'google_drive_pembayaran_folder_id']);
 
         $byName = [];
         foreach ($mahasiswas as $mahasiswa) {
@@ -32,18 +42,22 @@ class GoogleDriveLinkLegacy extends Command
 
         $this->processFolder(
             'Berkas',
+            $googleDrive,
             $googleDrive->listFolders($this->option('berkas-folder')),
             $byName,
             'google_drive_folder_id',
             'google_drive_folder_url',
+            fn (Mahasiswa $mahasiswa, array $folder) => $this->linkBerkasFiles($googleDrive, $mahasiswa, $folder),
         );
 
         $this->processFolder(
             'BerkasPembayaran',
+            $googleDrive,
             $googleDrive->listFolders($this->option('pembayaran-folder')),
             $byName,
             'google_drive_pembayaran_folder_id',
             'google_drive_pembayaran_folder_url',
+            fn (Mahasiswa $mahasiswa, array $folder) => $this->linkPembayaranFile($googleDrive, $mahasiswa, $folder),
         );
 
         if (!$this->option('apply')) {
@@ -54,13 +68,21 @@ class GoogleDriveLinkLegacy extends Command
         return self::SUCCESS;
     }
 
-    private function processFolder(string $label, array $driveFolders, array $byName, string $idColumn, string $urlColumn): void
-    {
+    private function processFolder(
+        string $label,
+        GoogleDriveService $googleDrive,
+        array $driveFolders,
+        array $byName,
+        string $idColumn,
+        string $urlColumn,
+        callable $fileLinker,
+    ): void {
         $this->newLine();
         $this->info('=== ' . $label . ' (' . count($driveFolders) . ' folder ditemukan di Drive) ===');
 
         $matched = 0;
         $alreadyLinked = 0;
+        $filesMatched = 0;
         $conflicts = [];
         $ambiguous = [];
         $noMatch = [];
@@ -81,30 +103,32 @@ class GoogleDriveLinkLegacy extends Command
 
             $mahasiswa = $candidates[0];
 
-            if ($mahasiswa->{$idColumn} === $folder['id']) {
-                $alreadyLinked++;
-                continue;
-            }
-
-            if (filled($mahasiswa->{$idColumn})) {
+            if (filled($mahasiswa->{$idColumn}) && $mahasiswa->{$idColumn} !== $folder['id']) {
                 $conflicts[] = "{$mahasiswa->nama_mahasiswa} ({$mahasiswa->kode_pmb}): sudah tertaut ke folder lain, folder '{$folder['name']}' dilewati";
                 continue;
             }
 
-            $matched++;
-
-            if ($this->option('apply')) {
-                $mahasiswa->forceFill([
-                    $idColumn => $folder['id'],
-                    $urlColumn => $folder['webViewLink'] ?? null,
-                ])->save();
+            if ($mahasiswa->{$idColumn} === $folder['id']) {
+                $alreadyLinked++;
             } else {
-                $this->line("  cocok: {$folder['name']} -> {$mahasiswa->nama_mahasiswa} ({$mahasiswa->kode_pmb})");
+                $matched++;
+
+                if ($this->option('apply')) {
+                    $mahasiswa->forceFill([
+                        $idColumn => $folder['id'],
+                        $urlColumn => $folder['webViewLink'] ?? null,
+                    ])->save();
+                } else {
+                    $this->line("  cocok: {$folder['name']} -> {$mahasiswa->nama_mahasiswa} ({$mahasiswa->kode_pmb})");
+                }
             }
+
+            $filesMatched += $fileLinker($mahasiswa, $folder);
         }
 
         $this->line(($this->option('apply') ? 'Ditautkan' : 'Akan ditautkan') . ": {$matched}");
         $this->line("Sudah tertaut sebelumnya: {$alreadyLinked}");
+        $this->line(($this->option('apply') ? 'File spesifik ditautkan' : 'File spesifik akan ditautkan') . ": {$filesMatched}");
 
         if ($conflicts) {
             $this->warn('Konflik (folder lama beda dengan yang ditemukan, dilewati, cek manual):');
@@ -126,6 +150,75 @@ class GoogleDriveLinkLegacy extends Command
                 $this->line("  - {$line}");
             }
         }
+    }
+
+    /**
+     * Match files inside a student's legacy "Berkas" folder to ijazah/ktp/kk/etc columns
+     * by looking for an exact type keyword token in the filename. Returns files matched/would-match.
+     */
+    private function linkBerkasFiles(GoogleDriveService $googleDrive, Mahasiswa $mahasiswa, array $folder): int
+    {
+        $berkas = $mahasiswa->berkas;
+
+        if (!$berkas) {
+            return 0;
+        }
+
+        $byType = [];
+        foreach ($googleDrive->listFiles($folder['id']) as $file) {
+            $tokens = preg_split('/[^A-Z0-9]+/', strtoupper($file['name']), -1, PREG_SPLIT_NO_EMPTY);
+            $types = array_intersect($tokens, array_keys(self::BERKAS_TYPE_COLUMNS));
+
+            if (count($types) === 1) {
+                $byType[array_values($types)[0]][] = $file;
+            }
+        }
+
+        $count = 0;
+        $updates = [];
+
+        foreach (self::BERKAS_TYPE_COLUMNS as $type => $column) {
+            $matches = $byType[$type] ?? [];
+
+            if (count($matches) !== 1 || filled($berkas->{$column})) {
+                continue;
+            }
+
+            $count++;
+            $updates[$column] = $matches[0]['webViewLink'] ?? null;
+        }
+
+        if ($updates && $this->option('apply')) {
+            $berkas->forceFill($updates)->save();
+        }
+
+        return $count;
+    }
+
+    /**
+     * Link a legacy bukti-bayar file to the mahasiswa's payment record, only when the match
+     * is unambiguous: exactly one file in the folder and exactly one payment record.
+     */
+    private function linkPembayaranFile(GoogleDriveService $googleDrive, Mahasiswa $mahasiswa, array $folder): int
+    {
+        $files = $googleDrive->listFiles($folder['id']);
+        $pembayarans = $mahasiswa->pembayarans;
+
+        if (count($files) !== 1 || $pembayarans->count() !== 1) {
+            return 0;
+        }
+
+        $pembayaran = $pembayarans->first();
+
+        if (filled($pembayaran->bukti_bayar_drive_url)) {
+            return 0;
+        }
+
+        if ($this->option('apply')) {
+            $pembayaran->forceFill(['bukti_bayar_drive_url' => $files[0]['webViewLink'] ?? null])->save();
+        }
+
+        return 1;
     }
 
     private function normalize(?string $value): string

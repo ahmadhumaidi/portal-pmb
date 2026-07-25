@@ -75,6 +75,7 @@ class PembayaranController extends Controller
             $mahasiswa = Mahasiswa::findOrFail($validated['mahasiswa_id']);
             $result = $googleDrive->storeAndBackup($mahasiswa, $request->file('bukti_bayar'), 'pembayaran/' . $mahasiswa->kode_pmb, 'Bukti Bayar');
             $validated['bukti_bayar_path'] = $result['path'];
+            $validated['bukti_bayar_drive_url'] = $result['drive_url'];
             $driveFailed = $result['failed'];
         }
 
@@ -111,6 +112,10 @@ class PembayaranController extends Controller
 
         if (Storage::disk('public')->exists($path)) {
             return response()->file(Storage::disk('public')->path($path));
+        }
+
+        if (filled($pembayaran->bukti_bayar_drive_url)) {
+            return redirect()->away($pembayaran->bukti_bayar_drive_url);
         }
 
         $pembayaran->loadMissing('mahasiswa');

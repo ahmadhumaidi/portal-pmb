@@ -23,6 +23,7 @@ class Pembayaran extends Model
         'nominal',
         'status_bayar',
         'bukti_bayar_path',
+        'bukti_bayar_drive_url',
         'catatan',
         'verified_at',
     ];

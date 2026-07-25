@@ -15,11 +15,11 @@ class BerkasController extends Controller
     private array $statuses = ['belum_upload', 'belum_lengkap', 'menunggu_verifikasi', 'lengkap', 'perlu_revisi'];
 
     private array $fileFields = [
-        'ijazah' => ['column' => 'ijazah_path', 'label' => 'Ijazah'],
-        'transkrip_awal' => ['column' => 'transkrip_awal_path', 'label' => 'Transkrip Awal'],
-        'ktp' => ['column' => 'ktp_path', 'label' => 'KTP'],
-        'kk' => ['column' => 'kk_path', 'label' => 'KK'],
-        'pas_foto' => ['column' => 'pas_foto_path', 'label' => 'Pas Foto'],
+        'ijazah' => ['column' => 'ijazah_path', 'drive_url_column' => 'ijazah_drive_url', 'label' => 'Ijazah'],
+        'transkrip_awal' => ['column' => 'transkrip_awal_path', 'drive_url_column' => 'transkrip_awal_drive_url', 'label' => 'Transkrip Awal'],
+        'ktp' => ['column' => 'ktp_path', 'drive_url_column' => 'ktp_drive_url', 'label' => 'KTP'],
+        'kk' => ['column' => 'kk_path', 'drive_url_column' => 'kk_drive_url', 'label' => 'KK'],
+        'pas_foto' => ['column' => 'pas_foto_path', 'drive_url_column' => 'pas_foto_drive_url', 'label' => 'Pas Foto'],
     ];
 
     public function index(Request $request): View
@@ -81,13 +81,19 @@ class BerkasController extends Controller
     {
         abort_unless(isset($this->fileFields[$field]), 404);
 
-        $column = $this->fileFields[$field]['column'];
-        $path = $berkas->{$column};
+        $meta = $this->fileFields[$field];
+        $path = $berkas->{$meta['column']};
 
         abort_if(blank($path), 404, 'File belum tersedia.');
 
         if (Storage::disk('public')->exists($path)) {
             return response()->file(Storage::disk('public')->path($path));
+        }
+
+        $driveFileUrl = $berkas->{$meta['drive_url_column']};
+
+        if (filled($driveFileUrl)) {
+            return redirect()->away($driveFileUrl);
         }
 
         $berkas->loadMissing('mahasiswa');
@@ -127,6 +133,7 @@ class BerkasController extends Controller
 
                 $result = $googleDrive->storeAndBackup($berkas->mahasiswa, $request->file($input), $directory, $meta['label']);
                 $validated[$column] = $result['path'];
+                $validated[$meta['drive_url_column']] = $result['drive_url'];
 
                 if ($result['failed']) {
                     $driveErrors[] = $meta['label'];

@@ -32,17 +32,21 @@ class GoogleDriveService
     {
         $path = $file->store($directory, 'public');
         $failed = false;
+        $driveUrl = null;
 
         try {
-            if ($this->uploadStudentFile($mahasiswa, $file, $label)) {
+            $result = $this->uploadStudentFile($mahasiswa, $file, $label);
+
+            if ($result) {
                 Storage::disk('public')->delete($path);
+                $driveUrl = $result['webViewLink'] ?? null;
             }
         } catch (Throwable $exception) {
             report($exception);
             $failed = true;
         }
 
-        return ['path' => $path, 'failed' => $failed];
+        return ['path' => $path, 'failed' => $failed, 'drive_url' => $driveUrl];
     }
 
     public function uploadStudentFile(Mahasiswa $mahasiswa, UploadedFile $file, string $label): ?array
@@ -117,6 +121,42 @@ class GoogleDriveService
         } while ($pageToken);
 
         return $folders;
+    }
+
+    /**
+     * List every file (non-folder) directly inside the given Drive folder (id, name, webViewLink), paginated.
+     */
+    public function listFiles(string $parentFolderId): array
+    {
+        $files = [];
+        $pageToken = null;
+
+        do {
+            $query = [
+                'q' => sprintf(
+                    "'%s' in parents and mimeType != '%s' and trashed = false",
+                    $this->escapeQuery($parentFolderId),
+                    self::DRIVE_FOLDER_MIME
+                ),
+                'fields' => 'nextPageToken,files(id,name,webViewLink)',
+                'pageSize' => 1000,
+            ];
+
+            if ($pageToken) {
+                $query['pageToken'] = $pageToken;
+            }
+
+            $response = Http::withToken($this->accessToken())->get('https://www.googleapis.com/drive/v3/files', $query);
+
+            if ($response->failed()) {
+                throw new RuntimeException('Ambil daftar file Google Drive gagal: ' . $response->body());
+            }
+
+            $files = array_merge($files, $response->json('files') ?? []);
+            $pageToken = $response->json('nextPageToken');
+        } while ($pageToken);
+
+        return $files;
     }
 
     private function studentFolder(Mahasiswa $mahasiswa): array
