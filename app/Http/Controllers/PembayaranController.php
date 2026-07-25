@@ -114,7 +114,8 @@ class PembayaranController extends Controller
         }
 
         $pembayaran->loadMissing('mahasiswa');
-        $driveFolderUrl = $pembayaran->mahasiswa->google_drive_folder_url;
+        $driveFolderUrl = $pembayaran->mahasiswa->google_drive_pembayaran_folder_url
+            ?: $pembayaran->mahasiswa->google_drive_folder_url;
 
         abort_if(blank($driveFolderUrl), 404, 'File sudah di-backup ke Google Drive tetapi link folder tidak ditemukan.');
 

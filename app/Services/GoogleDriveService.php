@@ -83,6 +83,42 @@ class GoogleDriveService
         return $response->json();
     }
 
+    /**
+     * List every direct subfolder of the given Drive folder (id, name, webViewLink), paginated.
+     */
+    public function listFolders(string $parentFolderId): array
+    {
+        $folders = [];
+        $pageToken = null;
+
+        do {
+            $query = [
+                'q' => sprintf(
+                    "'%s' in parents and mimeType = '%s' and trashed = false",
+                    $this->escapeQuery($parentFolderId),
+                    self::DRIVE_FOLDER_MIME
+                ),
+                'fields' => 'nextPageToken,files(id,name,webViewLink)',
+                'pageSize' => 1000,
+            ];
+
+            if ($pageToken) {
+                $query['pageToken'] = $pageToken;
+            }
+
+            $response = Http::withToken($this->accessToken())->get('https://www.googleapis.com/drive/v3/files', $query);
+
+            if ($response->failed()) {
+                throw new RuntimeException('Ambil daftar folder Google Drive gagal: ' . $response->body());
+            }
+
+            $folders = array_merge($folders, $response->json('files') ?? []);
+            $pageToken = $response->json('nextPageToken');
+        } while ($pageToken);
+
+        return $folders;
+    }
+
     private function studentFolder(Mahasiswa $mahasiswa): array
     {
         if ($mahasiswa->google_drive_folder_id) {

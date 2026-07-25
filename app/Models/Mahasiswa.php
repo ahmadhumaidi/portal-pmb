@@ -41,6 +41,8 @@ class Mahasiswa extends Model
         'keterangan',
         'google_drive_folder_id',
         'google_drive_folder_url',
+        'google_drive_pembayaran_folder_id',
+        'google_drive_pembayaran_folder_url',
     ];
 
     protected $casts = [
