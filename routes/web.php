@@ -35,8 +35,12 @@ Route::resource('berkas', BerkasController::class)
     ->parameters(['berkas' => 'berkas'])
     ->only(['index', 'show', 'edit', 'update']);
 
+Route::get('pembayaran/{pembayaran}/view', [PembayaranController::class, 'viewFile'])->name('pembayaran.view-file');
+
 Route::resource('pembayaran', PembayaranController::class)
     ->only(['index', 'show', 'create', 'store']);
+
+Route::get('hasil/{hasil}/view/{field}', [HasilController::class, 'viewFile'])->name('hasil.view-file');
 
 Route::resource('hasil', HasilController::class)
     ->only(['index', 'show', 'edit', 'update']);

@@ -31,7 +31,7 @@ $data = [
 <div class="detail-label">Bukti Bayar</div>
 <div class="detail-value">
 @if ($pembayaran->bukti_bayar_path)
-<a href="{{ asset('storage/' . $pembayaran->bukti_bayar_path) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Lihat Bukti</a>
+<a href="{{ route('pembayaran.view-file', $pembayaran) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Lihat Bukti</a>
 @else
 -
 @endif

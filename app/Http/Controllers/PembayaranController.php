@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Mahasiswa;
 use App\Models\Pembayaran;
+use App\Services\GoogleDriveService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PembayaranController extends Controller
 {
@@ -54,7 +56,7 @@ class PembayaranController extends Controller
         return view('pembayaran.create', compact('mahasiswas', 'selectedMahasiswa', 'statuses'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, GoogleDriveService $googleDrive): RedirectResponse
     {
         $validated = $request->validate([
             'mahasiswa_id' => ['required', 'exists:mahasiswas,id'],
@@ -67,9 +69,13 @@ class PembayaranController extends Controller
             'catatan' => ['nullable', 'string'],
         ]);
 
+        $driveFailed = false;
+
         if ($request->hasFile('bukti_bayar')) {
             $mahasiswa = Mahasiswa::findOrFail($validated['mahasiswa_id']);
-            $validated['bukti_bayar_path'] = $request->file('bukti_bayar')->store('pembayaran/' . $mahasiswa->kode_pmb, 'public');
+            $result = $googleDrive->storeAndBackup($mahasiswa, $request->file('bukti_bayar'), 'pembayaran/' . $mahasiswa->kode_pmb, 'Bukti Bayar');
+            $validated['bukti_bayar_path'] = $result['path'];
+            $driveFailed = $result['failed'];
         }
 
         unset($validated['bukti_bayar']);
@@ -81,7 +87,13 @@ class PembayaranController extends Controller
 
         $pembayaran = Pembayaran::create($validated);
 
-        return redirect()->route('pembayaran.show', $pembayaran)->with('success', 'Pembayaran manual berhasil disimpan.');
+        $redirect = redirect()->route('pembayaran.show', $pembayaran)->with('success', 'Pembayaran manual berhasil disimpan.');
+
+        if ($driveFailed) {
+            $redirect = $redirect->with('warning', 'Upload lokal berhasil, tetapi bukti bayar gagal masuk Google Drive.');
+        }
+
+        return $redirect;
     }
 
     public function show(Pembayaran $pembayaran): View
@@ -89,5 +101,23 @@ class PembayaranController extends Controller
         $pembayaran->load(['mahasiswa.kampus', 'mahasiswa.jurusan', 'inputBy', 'verifiedBy']);
 
         return view('pembayaran.show', compact('pembayaran'));
+    }
+
+    public function viewFile(Pembayaran $pembayaran): BinaryFileResponse|RedirectResponse
+    {
+        $path = $pembayaran->bukti_bayar_path;
+
+        abort_if(blank($path), 404, 'Bukti bayar belum tersedia.');
+
+        if (Storage::disk('public')->exists($path)) {
+            return response()->file(Storage::disk('public')->path($path));
+        }
+
+        $pembayaran->loadMissing('mahasiswa');
+        $driveFolderUrl = $pembayaran->mahasiswa->google_drive_folder_url;
+
+        abort_if(blank($driveFolderUrl), 404, 'File sudah di-backup ke Google Drive tetapi link folder tidak ditemukan.');
+
+        return redirect()->away($driveFolderUrl);
     }
 }

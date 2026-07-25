@@ -6,8 +6,10 @@ use App\Models\Mahasiswa;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 class GoogleDriveService
 {
@@ -17,8 +19,30 @@ class GoogleDriveService
     {
         return (bool) config('services.google_drive.enabled')
             && filled(config('services.google_drive.parent_folder_id'))
-            && filled(config('services.google_drive.service_account_json'))
-            && is_file(config('services.google_drive.service_account_json'));
+            && filled(config('services.google_drive.client_id'))
+            && filled(config('services.google_drive.client_secret'))
+            && filled(config('services.google_drive.refresh_token'));
+    }
+
+    /**
+     * Store a file on the local "public" disk, back it up to Google Drive, then
+     * delete the local copy once the backup succeeds so files don't pile up on the server.
+     */
+    public function storeAndBackup(Mahasiswa $mahasiswa, UploadedFile $file, string $directory, string $label): array
+    {
+        $path = $file->store($directory, 'public');
+        $failed = false;
+
+        try {
+            if ($this->uploadStudentFile($mahasiswa, $file, $label)) {
+                Storage::disk('public')->delete($path);
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+            $failed = true;
+        }
+
+        return ['path' => $path, 'failed' => $failed];
     }
 
     public function uploadStudentFile(Mahasiswa $mahasiswa, UploadedFile $file, string $label): ?array
@@ -140,27 +164,15 @@ class GoogleDriveService
 
     private function accessToken(): string
     {
-        $credentials = $this->credentials();
-        $cacheKey = 'google_drive_service_account_token_' . md5($credentials['client_email']);
+        $clientId = config('services.google_drive.client_id');
+        $cacheKey = 'google_drive_oauth_token_' . md5($clientId);
 
-        return Cache::remember($cacheKey, now()->addMinutes(50), function () use ($credentials) {
-            $now = time();
-            $header = ['alg' => 'RS256', 'typ' => 'JWT'];
-            $payload = [
-                'iss' => $credentials['client_email'],
-                'scope' => 'https://www.googleapis.com/auth/drive',
-                'aud' => 'https://oauth2.googleapis.com/token',
-                'iat' => $now,
-                'exp' => $now + 3600,
-            ];
-
-            $unsignedJwt = $this->base64Url(json_encode($header)) . '.' . $this->base64Url(json_encode($payload));
-            openssl_sign($unsignedJwt, $signature, $credentials['private_key'], OPENSSL_ALGO_SHA256);
-            $jwt = $unsignedJwt . '.' . $this->base64Url($signature);
-
+        return Cache::remember($cacheKey, now()->addMinutes(50), function () use ($clientId) {
             $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion' => $jwt,
+                'grant_type' => 'refresh_token',
+                'client_id' => $clientId,
+                'client_secret' => config('services.google_drive.client_secret'),
+                'refresh_token' => config('services.google_drive.refresh_token'),
             ]);
 
             if ($response->failed()) {
@@ -171,25 +183,8 @@ class GoogleDriveService
         });
     }
 
-    private function credentials(): array
-    {
-        $path = config('services.google_drive.service_account_json');
-        $credentials = json_decode(file_get_contents($path), true);
-
-        if (!is_array($credentials) || empty($credentials['client_email']) || empty($credentials['private_key'])) {
-            throw new RuntimeException('Credential Google Drive tidak valid.');
-        }
-
-        return $credentials;
-    }
-
     private function escapeQuery(string $value): string
     {
         return str_replace("'", "\\'", $value);
-    }
-
-    private function base64Url(string $value): string
-    {
-        return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
     }
 }

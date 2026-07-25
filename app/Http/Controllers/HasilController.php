@@ -3,14 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hasil;
+use App\Services\GoogleDriveService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class HasilController extends Controller
 {
     private array $statuses = ['belum_siap', 'siap_dikirim', 'sudah_dikirim', 'sudah_diterima', 'perlu_revisi'];
+
+    private array $fileFields = [
+        'screenshot_pisn' => ['column' => 'screenshot_pisn_path', 'label' => 'Screenshot PISN'],
+        'screenshot_satudikti' => ['column' => 'screenshot_satudikti_path', 'label' => 'Screenshot Satudikti'],
+        'scan_ijazah' => ['column' => 'scan_ijazah_path', 'label' => 'Scan Ijazah'],
+        'scan_transkrip' => ['column' => 'scan_transkrip_path', 'label' => 'Scan Transkrip'],
+    ];
 
     public function index(Request $request): View
     {
@@ -50,7 +59,31 @@ class HasilController extends Controller
     {
         $hasil->load(['mahasiswa.kampus', 'mahasiswa.jurusan', 'inputBy']);
 
-        return view('hasil.show', compact('hasil'));
+        return view('hasil.show', [
+            'hasil' => $hasil,
+            'fileFields' => $this->fileFields,
+        ]);
+    }
+
+    public function viewFile(Hasil $hasil, string $field): BinaryFileResponse|RedirectResponse
+    {
+        abort_unless(isset($this->fileFields[$field]), 404);
+
+        $column = $this->fileFields[$field]['column'];
+        $path = $hasil->{$column};
+
+        abort_if(blank($path), 404, 'File belum tersedia.');
+
+        if (Storage::disk('public')->exists($path)) {
+            return response()->file(Storage::disk('public')->path($path));
+        }
+
+        $hasil->loadMissing('mahasiswa');
+        $driveFolderUrl = $hasil->mahasiswa->google_drive_folder_url;
+
+        abort_if(blank($driveFolderUrl), 404, 'File sudah di-backup ke Google Drive tetapi link folder tidak ditemukan.');
+
+        return redirect()->away($driveFolderUrl);
     }
 
     public function edit(Hasil $hasil): View
@@ -61,7 +94,7 @@ class HasilController extends Controller
         return view('hasil.edit', compact('hasil', 'statuses'));
     }
 
-    public function update(Request $request, Hasil $hasil): RedirectResponse
+    public function update(Request $request, Hasil $hasil, GoogleDriveService $googleDrive): RedirectResponse
     {
         $validated = $request->validate([
             'status_kelulusan' => ['nullable', 'string', 'max:255'],
@@ -79,27 +112,38 @@ class HasilController extends Controller
             'keterangan' => ['nullable', 'string'],
         ]);
 
+        $hasil->loadMissing('mahasiswa');
         $directory = 'hasil/' . $hasil->mahasiswa->kode_pmb;
-        $files = [
-            'screenshot_pisn' => 'screenshot_pisn_path',
-            'screenshot_satudikti' => 'screenshot_satudikti_path',
-            'scan_ijazah' => 'scan_ijazah_path',
-            'scan_transkrip' => 'scan_transkrip_path',
-        ];
+        $driveErrors = [];
 
-        foreach ($files as $input => $column) {
+        foreach ($this->fileFields as $input => $meta) {
+            $column = $meta['column'];
+
             if ($request->hasFile($input)) {
                 if ($hasil->{$column}) {
                     Storage::disk('public')->delete($hasil->{$column});
                 }
-                $validated[$column] = $request->file($input)->store($directory, 'public');
+
+                $result = $googleDrive->storeAndBackup($hasil->mahasiswa, $request->file($input), $directory, $meta['label']);
+                $validated[$column] = $result['path'];
+
+                if ($result['failed']) {
+                    $driveErrors[] = $meta['label'];
+                }
             }
+
             unset($validated[$input]);
         }
 
         $validated['input_by'] = auth()->id();
         $hasil->update($validated);
 
-        return redirect()->route('hasil.show', $hasil)->with('success', 'Hasil mahasiswa berhasil diperbarui.');
+        $redirect = redirect()->route('hasil.show', $hasil)->with('success', 'Hasil mahasiswa berhasil diperbarui.');
+
+        if ($driveErrors) {
+            $redirect = $redirect->with('warning', 'Upload lokal berhasil, tetapi sebagian file gagal masuk Google Drive: ' . implode(', ', $driveErrors) . '.');
+        }
+
+        return $redirect;
     }
 }

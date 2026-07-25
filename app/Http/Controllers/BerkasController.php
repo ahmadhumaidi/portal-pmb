@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Throwable;
 
 class BerkasController extends Controller
 {
@@ -78,16 +77,25 @@ class BerkasController extends Controller
         ]);
     }
 
-    public function viewFile(Berkas $berkas, string $field): BinaryFileResponse
+    public function viewFile(Berkas $berkas, string $field): BinaryFileResponse|RedirectResponse
     {
         abort_unless(isset($this->fileFields[$field]), 404);
 
         $column = $this->fileFields[$field]['column'];
         $path = $berkas->{$column};
 
-        abort_if(blank($path) || !Storage::disk('public')->exists($path), 404, 'File belum tersedia.');
+        abort_if(blank($path), 404, 'File belum tersedia.');
 
-        return response()->file(Storage::disk('public')->path($path));
+        if (Storage::disk('public')->exists($path)) {
+            return response()->file(Storage::disk('public')->path($path));
+        }
+
+        $berkas->loadMissing('mahasiswa');
+        $driveFolderUrl = $berkas->mahasiswa->google_drive_folder_url;
+
+        abort_if(blank($driveFolderUrl), 404, 'File sudah di-backup ke Google Drive tetapi link folder tidak ditemukan.');
+
+        return redirect()->away($driveFolderUrl);
     }
 
     public function update(Request $request, Berkas $berkas, GoogleDriveService $googleDrive): RedirectResponse
@@ -117,13 +125,10 @@ class BerkasController extends Controller
                     Storage::disk('public')->delete($berkas->{$column});
                 }
 
-                $file = $request->file($input);
-                $validated[$column] = $file->store($directory, 'public');
+                $result = $googleDrive->storeAndBackup($berkas->mahasiswa, $request->file($input), $directory, $meta['label']);
+                $validated[$column] = $result['path'];
 
-                try {
-                    $googleDrive->uploadStudentFile($berkas->mahasiswa, $file, $meta['label']);
-                } catch (Throwable $exception) {
-                    report($exception);
+                if ($result['failed']) {
                     $driveErrors[] = $meta['label'];
                 }
             }
