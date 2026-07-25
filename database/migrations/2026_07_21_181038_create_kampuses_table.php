@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('kampuses', function (Blueprint $table) {
+            $table->id();
+
+            // Identitas sistem
+            $table->uuid('kampus_uuid')->unique();
+
+            // Identitas yang dilihat pengguna
+            $table->string('kode_kampus', 20)->unique();
+
+            $table->string('nama_kampus');
+            $table->decimal('harga', 15, 2)->default(0);
+            $table->text('catatan')->nullable();
+            $table->boolean('status_aktif')->default(true);
+
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('kampuses');
+    }
+};
