@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hasil;
-use App\Services\GoogleDriveService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -94,7 +93,7 @@ class HasilController extends Controller
         return view('hasil.edit', compact('hasil', 'statuses'));
     }
 
-    public function update(Request $request, Hasil $hasil, GoogleDriveService $googleDrive): RedirectResponse
+    public function update(Request $request, Hasil $hasil): RedirectResponse
     {
         $validated = $request->validate([
             'status_kelulusan' => ['nullable', 'string', 'max:255'],
@@ -114,7 +113,6 @@ class HasilController extends Controller
 
         $hasil->loadMissing('mahasiswa');
         $directory = 'hasil/' . $hasil->mahasiswa->kode_pmb;
-        $driveErrors = [];
 
         foreach ($this->fileFields as $input => $meta) {
             $column = $meta['column'];
@@ -124,12 +122,7 @@ class HasilController extends Controller
                     Storage::disk('public')->delete($hasil->{$column});
                 }
 
-                $result = $googleDrive->storeAndBackup($hasil->mahasiswa, $request->file($input), $directory, $meta['label']);
-                $validated[$column] = $result['path'];
-
-                if ($result['failed']) {
-                    $driveErrors[] = $meta['label'];
-                }
+                $validated[$column] = $request->file($input)->store($directory, 'public');
             }
 
             unset($validated[$input]);
@@ -138,12 +131,6 @@ class HasilController extends Controller
         $validated['input_by'] = auth()->id();
         $hasil->update($validated);
 
-        $redirect = redirect()->route('hasil.show', $hasil)->with('success', 'Hasil mahasiswa berhasil diperbarui.');
-
-        if ($driveErrors) {
-            $redirect = $redirect->with('warning', 'Upload lokal berhasil, tetapi sebagian file gagal masuk Google Drive: ' . implode(', ', $driveErrors) . '.');
-        }
-
-        return $redirect;
+        return redirect()->route('hasil.show', $hasil)->with('success', 'Hasil mahasiswa berhasil diperbarui.');
     }
 }

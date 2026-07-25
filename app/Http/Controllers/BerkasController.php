@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Berkas;
-use App\Services\GoogleDriveService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -104,7 +103,7 @@ class BerkasController extends Controller
         return redirect()->away($driveFolderUrl);
     }
 
-    public function update(Request $request, Berkas $berkas, GoogleDriveService $googleDrive): RedirectResponse
+    public function update(Request $request, Berkas $berkas): RedirectResponse
     {
         $berkas->loadMissing('mahasiswa');
 
@@ -119,25 +118,17 @@ class BerkasController extends Controller
         ]);
 
         $directory = 'berkas/' . $berkas->mahasiswa->kode_pmb;
-        $driveErrors = [];
-        $hasUploadedFile = false;
 
         foreach ($this->fileFields as $input => $meta) {
             if ($request->hasFile($input)) {
-                $hasUploadedFile = true;
                 $column = $meta['column'];
 
                 if ($berkas->{$column}) {
                     Storage::disk('public')->delete($berkas->{$column});
                 }
 
-                $result = $googleDrive->storeAndBackup($berkas->mahasiswa, $request->file($input), $directory, $meta['label']);
-                $validated[$column] = $result['path'];
-                $validated[$meta['drive_url_column']] = $result['drive_url'];
-
-                if ($result['failed']) {
-                    $driveErrors[] = $meta['label'];
-                }
+                $validated[$column] = $request->file($input)->store($directory, 'public');
+                $validated[$meta['drive_url_column']] = null;
             }
         }
 
@@ -145,21 +136,6 @@ class BerkasController extends Controller
 
         $berkas->update($validated);
 
-        $message = 'Berkas mahasiswa berhasil diperbarui.';
-        $redirect = redirect()->route('berkas.show', $berkas)->with('success', $message);
-
-        if ($hasUploadedFile && !$googleDrive->configured()) {
-            return $redirect->with('warning', 'Upload lokal berhasil. Google Drive belum aktif karena credential belum diisi.');
-        }
-
-        if ($driveErrors) {
-            return $redirect->with('warning', 'Upload lokal berhasil, tetapi sebagian file gagal masuk Google Drive: ' . implode(', ', $driveErrors) . '.');
-        }
-
-        if ($hasUploadedFile) {
-            return redirect()->route('berkas.show', $berkas)->with('success', 'Berkas mahasiswa berhasil diperbarui dan dikirim ke Google Drive.');
-        }
-
-        return $redirect;
+        return redirect()->route('berkas.show', $berkas)->with('success', 'Berkas mahasiswa berhasil diperbarui.');
     }
 }

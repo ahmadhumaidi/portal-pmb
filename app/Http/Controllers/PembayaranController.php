@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Mahasiswa;
 use App\Models\Pembayaran;
-use App\Services\GoogleDriveService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -56,7 +55,7 @@ class PembayaranController extends Controller
         return view('pembayaran.create', compact('mahasiswas', 'selectedMahasiswa', 'statuses'));
     }
 
-    public function store(Request $request, GoogleDriveService $googleDrive): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'mahasiswa_id' => ['required', 'exists:mahasiswas,id'],
@@ -69,14 +68,9 @@ class PembayaranController extends Controller
             'catatan' => ['nullable', 'string'],
         ]);
 
-        $driveFailed = false;
-
         if ($request->hasFile('bukti_bayar')) {
             $mahasiswa = Mahasiswa::findOrFail($validated['mahasiswa_id']);
-            $result = $googleDrive->storeAndBackup($mahasiswa, $request->file('bukti_bayar'), 'pembayaran/' . $mahasiswa->kode_pmb, 'Bukti Bayar');
-            $validated['bukti_bayar_path'] = $result['path'];
-            $validated['bukti_bayar_drive_url'] = $result['drive_url'];
-            $driveFailed = $result['failed'];
+            $validated['bukti_bayar_path'] = $request->file('bukti_bayar')->store('pembayaran/' . $mahasiswa->kode_pmb, 'public');
         }
 
         unset($validated['bukti_bayar']);
@@ -88,13 +82,7 @@ class PembayaranController extends Controller
 
         $pembayaran = Pembayaran::create($validated);
 
-        $redirect = redirect()->route('pembayaran.show', $pembayaran)->with('success', 'Pembayaran manual berhasil disimpan.');
-
-        if ($driveFailed) {
-            $redirect = $redirect->with('warning', 'Upload lokal berhasil, tetapi bukti bayar gagal masuk Google Drive.');
-        }
-
-        return $redirect;
+        return redirect()->route('pembayaran.show', $pembayaran)->with('success', 'Pembayaran manual berhasil disimpan.');
     }
 
     public function show(Pembayaran $pembayaran): View
