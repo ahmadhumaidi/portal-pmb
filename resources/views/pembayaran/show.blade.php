@@ -17,7 +17,6 @@ $data = [
 'Tanggal Bayar' => optional($pembayaran->tanggal_bayar)->format('d M Y'),
 'Nominal' => 'Rp ' . number_format($pembayaran->nominal, 0, ',', '.'),
 'Status Bayar' => ucfirst(str_replace('_', ' ', $pembayaran->status_bayar)),
-'Bukti Bayar' => $pembayaran->bukti_bayar_path,
 'Catatan' => $pembayaran->catatan,
 'Input By' => $pembayaran->inputBy->name ?? null,
 'Verified By' => $pembayaran->verifiedBy->name ?? null,
@@ -29,5 +28,13 @@ $data = [
 <a href="{{ route('pembayaran.index') }}" class="btn btn-light border mb-3"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
 <div class="card dashboard-card border-0"><div class="card-header"><div><h5>Data Lengkap Pembayaran</h5><small>Data transaksi yang dipakai sistem</small></div></div><div class="card-body"><div class="detail-list">
 @foreach ($data as $label => $value)<div class="detail-label">{{ $label }}</div><div class="detail-value">{{ $value ?: '-' }}</div>@endforeach
+<div class="detail-label">Bukti Bayar</div>
+<div class="detail-value">
+@if ($pembayaran->bukti_bayar_path)
+<a href="{{ asset('storage/' . $pembayaran->bukti_bayar_path) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Lihat Bukti</a>
+@else
+-
+@endif
+</div>
 </div></div></div>
 @endsection
