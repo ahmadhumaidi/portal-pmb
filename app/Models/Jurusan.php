@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\HasBusinessCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Jurusan extends Model
@@ -41,6 +42,11 @@ class Jurusan extends Model
     public function kampus(): BelongsTo
     {
         return $this->belongsTo(Kampus::class);
+    }
+
+    public function mahasiswas(): HasMany
+    {
+        return $this->hasMany(Mahasiswa::class);
     }
 }
 

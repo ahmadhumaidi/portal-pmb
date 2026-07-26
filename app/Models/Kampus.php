@@ -43,5 +43,10 @@ class Kampus extends Model
     {
         return $this->hasMany(Jurusan::class);
     }
+
+    public function mahasiswas(): HasMany
+    {
+        return $this->hasMany(Mahasiswa::class);
+    }
 }
 

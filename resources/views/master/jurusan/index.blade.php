@@ -82,6 +82,7 @@
                         <th>Jurusan</th>
                         <th>Jenjang</th>
                         <th>Kampus</th>
+                        <th>Jumlah Pendaftar</th>
                         <th>Status</th>
                         <th class="text-end" style="width: 150px;">Aksi</th>
                     </tr>
@@ -112,6 +113,10 @@
 
                             <td>
                                 {{ $jurusan->kampus->nama_kampus }}
+                            </td>
+
+                            <td>
+                                <span class="badge text-bg-light border text-dark">{{ $jurusan->mahasiswas_count }}</span>
                             </td>
 
                             <td>
@@ -150,7 +155,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="8" class="text-center py-5 text-muted">
                                 <i class="bi bi-mortarboard fs-1 d-block mb-2"></i>
                                 Belum ada data jurusan.
                             </td>

@@ -18,6 +18,7 @@ class JurusanController extends Controller
 
         $jurusans = Jurusan::query()
             ->with('kampus')
+            ->withCount('mahasiswas')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery

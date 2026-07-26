@@ -15,6 +15,7 @@ class KampusController extends Controller
         $search = trim((string) $request->query('search'));
 
         $kampuses = Kampus::query()
+            ->withCount('mahasiswas')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery

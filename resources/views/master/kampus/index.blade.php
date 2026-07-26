@@ -90,6 +90,7 @@
                         <th>Nama Kampus</th>
                         <th>Biaya</th>
                         <th>Jurusan</th>
+                        <th>Jumlah Pendaftar</th>
                         <th>Status</th>
                         <th>Catatan</th>
                         <th class="text-end" style="width: 150px;">
@@ -123,6 +124,10 @@
 
                             <td>
                                 {{ $kampus->jurusans()->count() }}
+                            </td>
+
+                            <td>
+                                <span class="badge text-bg-light border text-dark">{{ $kampus->mahasiswas_count }}</span>
                             </td>
 
                             <td>
@@ -171,7 +176,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-buildings fs-1 d-block mb-2"></i>
                                 Belum ada data kampus.
                             </td>
