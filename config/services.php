@@ -43,4 +43,8 @@ return [
         'refresh_token' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
     ],
 
+    'paddle_ocr' => [
+        'base_url' => env('PADDLE_OCR_BASE_URL', 'http://127.0.0.1:8866'),
+    ],
+
 ];
