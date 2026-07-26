@@ -47,6 +47,22 @@
             <span>Staff</span>
         </a>
 
+        <a
+            href="{{ route('koordinator.index') }}"
+            class="sidebar-link {{ request()->routeIs('koordinator.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-person-badge"></i>
+            <span>Koordinator</span>
+        </a>
+
+        <a
+            href="{{ route('biaya-kampus.index') }}"
+            class="sidebar-link {{ request()->routeIs('biaya-kampus.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-cash-coin"></i>
+            <span>Biaya Kampus</span>
+        </a>
+
         <div class="sidebar-section">PMB</div>
 
         <a
@@ -66,11 +82,27 @@
         </a>
 
         <a
+            href="{{ route('ocr.index') }}"
+            class="sidebar-link {{ request()->routeIs('ocr.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-robot"></i>
+            <span>AI OCR</span>
+        </a>
+
+        <a
             href="{{ route('pembayaran.index') }}"
             class="sidebar-link {{ request()->routeIs('pembayaran.*') ? 'active' : '' }}"
         >
             <i class="bi bi-wallet2"></i>
             <span>Pembayaran</span>
+        </a>
+
+        <a
+            href="{{ route('setoran-kampus.index') }}"
+            class="sidebar-link {{ request()->routeIs('setoran-kampus.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-send-check"></i>
+            <span>Setoran Kampus</span>
         </a>
 
         <a
