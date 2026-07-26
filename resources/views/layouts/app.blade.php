@@ -32,12 +32,17 @@
             @if (session('warning'))
                 <div class="alert alert-warning">{{ session('warning') }}</div>
             @endif
+            @if (session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
             @yield('content')
         </main>
 
     </div>
 
 </div>
+
+@stack('scripts')
 
 </body>
 </html>
