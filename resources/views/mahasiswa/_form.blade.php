@@ -25,11 +25,48 @@
     <div class="col-md-4"><label for="nama_ibu" class="form-label">Nama Ibu</label><input type="text" id="nama_ibu" name="nama_ibu" class="form-control @error('nama_ibu') is-invalid @enderror" value="{{ old('nama_ibu', $mahasiswa->nama_ibu ?? '') }}">@error('nama_ibu')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
 
     <div class="col-md-6"><label for="asal_sekolah" class="form-label">Asal Sekolah</label><input type="text" id="asal_sekolah" name="asal_sekolah" class="form-control @error('asal_sekolah') is-invalid @enderror" value="{{ old('asal_sekolah', $mahasiswa->asal_sekolah ?? '') }}">@error('asal_sekolah')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+    <div class="col-md-6">
+        <label for="koordinator_id" class="form-label">Koordinator Kelas</label>
+        <div class="input-group">
+            <select id="koordinator_id" name="koordinator_id" class="form-select @error('koordinator_id') is-invalid @enderror">
+                <option value="">Belum ditentukan</option>
+                @foreach ($koordinators as $koordinator)
+                    <option value="{{ $koordinator->id }}" @selected(old('koordinator_id', $mahasiswa->koordinator_id ?? '') == $koordinator->id)>{{ $koordinator->nama_koordinator }}</option>
+                @endforeach
+            </select>
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#tambahKoordinatorModal" title="Tambah koordinator baru">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+            @error('koordinator_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </div>
     <div class="col-md-6"><label for="alamat" class="form-label">Alamat KTP</label><textarea id="alamat" name="alamat" rows="3" class="form-control @error('alamat') is-invalid @enderror">{{ old('alamat', $mahasiswa->alamat ?? '') }}</textarea>@error('alamat')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
     <div class="col-12"><label for="keterangan" class="form-label">Keterangan</label><textarea id="keterangan" name="keterangan" rows="3" class="form-control @error('keterangan') is-invalid @enderror">{{ old('keterangan', $mahasiswa->keterangan ?? '') }}</textarea>@error('keterangan')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
 </div>
 
 <div class="d-flex justify-content-end gap-2 mt-4"><a href="{{ route('mahasiswa.index') }}" class="btn btn-light border">Batal</a><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Simpan</button></div>
+
+<div class="modal fade" id="tambahKoordinatorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div id="formTambahKoordinator">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Koordinator Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="nama_koordinator_baru" class="form-label">Nama Koordinator</label>
+                    <input type="text" id="nama_koordinator_baru" class="form-control" placeholder="Nama koordinator kelas" autofocus>
+                    <div id="koordinatorBaruError" class="text-danger small mt-1"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" id="btnSimpanKoordinator" class="btn btn-primary">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -66,5 +103,121 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     renderJurusan();
+
+    const koordinatorSelect = document.getElementById('koordinator_id');
+    const koordinatorModalEl = document.getElementById('tambahKoordinatorModal');
+    const koordinatorInput = document.getElementById('nama_koordinator_baru');
+    const koordinatorError = document.getElementById('koordinatorBaruError');
+    const koordinatorSubmitButton = document.getElementById('btnSimpanKoordinator');
+    const koordinatorModal = window.bootstrap ? new window.bootstrap.Modal(koordinatorModalEl) : null;
+
+    function showKoordinatorToast(message) {
+        let container = document.getElementById('koordinatorToastContainer');
+
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'koordinatorToastContainer';
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = 1080;
+            document.body.appendChild(container);
+        }
+
+        const toastEl = document.createElement('div');
+        toastEl.className = 'toast align-items-center text-bg-success border-0';
+        toastEl.setAttribute('role', 'alert');
+        toastEl.innerHTML = '<div class="d-flex"><div class="toast-body"><i class="bi bi-check-circle me-1"></i>' + message + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
+        container.appendChild(toastEl);
+
+        if (window.bootstrap) {
+            const toast = new window.bootstrap.Toast(toastEl, { delay: 4000 });
+            toastEl.addEventListener('hidden.bs.toast', function () {
+                toastEl.remove();
+            });
+            toast.show();
+        } else {
+            toastEl.classList.add('show');
+            setTimeout(function () {
+                toastEl.remove();
+            }, 4000);
+        }
+    }
+
+    koordinatorModalEl.addEventListener('shown.bs.modal', function () {
+        koordinatorInput.focus();
+    });
+
+    koordinatorModalEl.addEventListener('hidden.bs.modal', function () {
+        koordinatorInput.value = '';
+        koordinatorError.textContent = '';
+        koordinatorInput.classList.remove('is-invalid');
+    });
+
+    function simpanKoordinatorBaru() {
+        const nama = koordinatorInput.value.trim();
+        koordinatorError.textContent = '';
+        koordinatorInput.classList.remove('is-invalid');
+
+        if (!nama) {
+            koordinatorError.textContent = 'Nama koordinator wajib diisi.';
+            koordinatorInput.classList.add('is-invalid');
+            return;
+        }
+
+        koordinatorSubmitButton.disabled = true;
+
+        fetch('{{ route('koordinator.store') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ nama_koordinator: nama, status_aktif: 1 }),
+        })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (!result.ok) {
+                    const message = result.data.errors && result.data.errors.nama_koordinator
+                        ? result.data.errors.nama_koordinator[0]
+                        : (result.data.message || 'Gagal menambahkan koordinator.');
+                    koordinatorError.textContent = message;
+                    koordinatorInput.classList.add('is-invalid');
+                    return;
+                }
+
+                const option = document.createElement('option');
+                option.value = result.data.id;
+                option.textContent = result.data.nama_koordinator;
+                option.selected = true;
+                koordinatorSelect.appendChild(option);
+
+                if (koordinatorModal) {
+                    koordinatorModal.hide();
+                } else {
+                    koordinatorModalEl.classList.remove('show');
+                }
+
+                showKoordinatorToast('Koordinator "' + result.data.nama_koordinator + '" berhasil ditambahkan.');
+            })
+            .catch(function () {
+                koordinatorError.textContent = 'Terjadi kesalahan, silakan coba lagi.';
+            })
+            .finally(function () {
+                koordinatorSubmitButton.disabled = false;
+            });
+    }
+
+    koordinatorSubmitButton.addEventListener('click', simpanKoordinatorBaru);
+
+    koordinatorInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            simpanKoordinatorBaru();
+        }
+    });
 });
 </script>
