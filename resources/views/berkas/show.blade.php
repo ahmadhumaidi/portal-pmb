@@ -19,7 +19,17 @@
         'Diubah Sistem' => optional($berkas->updated_at)->format('d M Y H:i'),
     ];
 @endphp
-<div class="d-flex justify-content-between align-items-center mb-3"><a href="{{ route('berkas.index') }}" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Kembali</a><a href="{{ route('berkas.edit', $berkas) }}" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Upload / Edit Berkas</a></div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{{ route('berkas.index') }}" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('berkas.edit', $berkas) }}" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Upload / Edit Berkas</a>
+        <form action="{{ route('berkas.destroy', $berkas) }}" method="POST" onsubmit="return confirm('Hapus data berkas ini beserta semua file yang sudah diupload?')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Hapus</button>
+        </form>
+    </div>
+</div>
 <div class="card dashboard-card border-0 mb-4"><div class="card-header"><div><h5>File Berkas</h5><small>Dokumen mahasiswa yang sudah di-upload</small></div></div><div class="card-body"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Dokumen</th><th class="text-end">Aksi</th></tr></thead><tbody>
 @foreach ($fileFields as $field => $meta)
 @php $path = $berkas->{$meta['column']}; @endphp

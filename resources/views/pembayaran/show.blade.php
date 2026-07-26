@@ -6,7 +6,7 @@
 
 @section('content')
 @php
-$data = [
+$mahasiswaData = [
 'Kode Pembayaran' => $pembayaran->kode_pembayaran,
 'Mahasiswa' => $pembayaran->mahasiswa->nama_mahasiswa ?? null,
 'Kode PMB' => $pembayaran->mahasiswa->kode_pmb ?? null,
@@ -25,16 +25,30 @@ $data = [
 'Diubah Sistem' => optional($pembayaran->updated_at)->format('d M Y H:i'),
 ];
 @endphp
-<a href="{{ route('pembayaran.index') }}" class="btn btn-light border mb-3"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
-<div class="card dashboard-card border-0"><div class="card-header"><div><h5>Data Lengkap Pembayaran</h5><small>Data transaksi yang dipakai sistem</small></div></div><div class="card-body"><div class="detail-list">
-@foreach ($data as $label => $value)<div class="detail-label">{{ $label }}</div><div class="detail-value">{{ $value ?: '-' }}</div>@endforeach
-<div class="detail-label">Bukti Bayar</div>
-<div class="detail-value">
-@if ($pembayaran->bukti_bayar_path)
-<a href="{{ route('pembayaran.view-file', $pembayaran) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Lihat Bukti</a>
-@else
--
-@endif
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{{ route('pembayaran.index') }}" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('pembayaran.edit', $pembayaran) }}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Edit Pembayaran</a>
+        <form action="{{ route('pembayaran.destroy', $pembayaran) }}" method="POST" onsubmit="return confirm('Hapus data pembayaran ini beserta bukti bayarnya?')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Hapus</button>
+        </form>
+    </div>
 </div>
-</div></div></div>
+
+<div class="card dashboard-card border-0 mb-4">
+    <div class="card-header"><div><h5>Pembayaran dari Mahasiswa</h5><small>Uang yang diterima dari mahasiswa</small></div></div>
+    <div class="card-body"><div class="detail-list">
+    @foreach ($mahasiswaData as $label => $value)<div class="detail-label">{{ $label }}</div><div class="detail-value">{{ $value ?: '-' }}</div>@endforeach
+    <div class="detail-label">Bukti Bayar</div>
+    <div class="detail-value">
+    @if ($pembayaran->bukti_bayar_path)
+    <a href="{{ route('pembayaran.view-file', [$pembayaran, 'bukti_bayar']) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Lihat Bukti</a>
+    @else
+    -
+    @endif
+    </div>
+    </div></div>
+</div>
 @endsection

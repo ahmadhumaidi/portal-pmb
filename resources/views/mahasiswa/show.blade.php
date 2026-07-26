@@ -24,19 +24,26 @@
         'Alamat KTP' => $mahasiswa->alamat,
         'Nama Ibu' => $mahasiswa->nama_ibu,
         'Asal Sekolah' => $mahasiswa->asal_sekolah,
+        'Koordinator Kelas' => $mahasiswa->koordinator->nama_koordinator ?? null,
         'Tahun Lulus' => $mahasiswa->tahun_lulus,
         'Harga Kesepakatan' => 'Rp ' . number_format($mahasiswa->harga_kesepakatan, 0, ',', '.'),
         'Status Pendaftaran' => ucfirst(str_replace('_', ' ', $mahasiswa->status_pendaftaran)),
         'Keterangan' => $mahasiswa->keterangan,
-        'Google Drive Folder ID' => $mahasiswa->google_drive_folder_id,
-        'Google Drive Folder URL' => $mahasiswa->google_drive_folder_url,
         'Dibuat Sistem' => optional($mahasiswa->created_at)->format('d M Y H:i'),
         'Diubah Sistem' => optional($mahasiswa->updated_at)->format('d M Y H:i'),
     ];
 @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <a href="{{ route('mahasiswa.index') }}" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Kembali</a><a href="{{ route('mahasiswa.edit', $mahasiswa) }}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Edit Data</a>
+    <a href="{{ route('mahasiswa.index') }}" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('mahasiswa.edit', $mahasiswa) }}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Edit Data</a>
+        <form action="{{ route('mahasiswa.destroy', $mahasiswa) }}" method="POST" onsubmit="return confirm('Hapus data mahasiswa ini? Berkas dan pembayaran yang terkait akan ikut terhapus permanen.')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Hapus</button>
+        </form>
+    </div>
 </div>
 
 <div class="row g-4">
@@ -55,6 +62,21 @@
     </div>
 
     <div class="col-xl-4">
+        @php
+            $biayaKampus = $mahasiswa->resolvedBiayaKampus();
+            $keuntungan = $mahasiswa->keuntungan();
+        @endphp
+        <div class="card dashboard-card border-0 mb-4">
+            <div class="card-header"><div><h5>Rekap Keuangan</h5><small>Harga kesepakatan dikurangi biaya kampus</small></div></div>
+            <div class="card-body detail-list">
+                <div class="detail-label">Harga Kesepakatan</div>
+                <div class="detail-value">Rp {{ number_format($mahasiswa->harga_kesepakatan, 0, ',', '.') }}</div>
+                <div class="detail-label">Biaya Kampus</div>
+                <div class="detail-value">{{ $biayaKampus !== null ? 'Rp ' . number_format($biayaKampus, 0, ',', '.') : 'Belum diatur' }}</div>
+                <div class="detail-label">Keuntungan</div>
+                <div class="detail-value fw-semibold {{ $keuntungan !== null && $keuntungan < 0 ? 'text-danger' : 'text-success' }}">{{ $keuntungan !== null ? 'Rp ' . number_format($keuntungan, 0, ',', '.') : '-' }}</div>
+            </div>
+        </div>
         <div class="card dashboard-card border-0 mb-4">
             <div class="card-header"><div><h5>Ringkasan Modul</h5><small>Data turunan mahasiswa</small></div></div>
             <div class="card-body d-grid gap-2">
@@ -63,6 +85,9 @@
                 @endif
                 <a href="{{ route('pembayaran.create', ['mahasiswa_id' => $mahasiswa->id]) }}" class="btn btn-outline-success text-start">Input Pembayaran Manual</a>@foreach ($mahasiswa->pembayarans as $pembayaran)
                     <a href="{{ route('pembayaran.show', $pembayaran) }}" class="btn btn-outline-primary text-start">Pembayaran: {{ $pembayaran->kode_pembayaran }}</a>
+                @endforeach
+                <a href="{{ route('setoran-kampus.create', ['mahasiswa_id' => $mahasiswa->id]) }}" class="btn btn-outline-success text-start">Input Setoran ke Kampus</a>@foreach ($mahasiswa->setoranKampus as $setoran)
+                    <a href="{{ route('setoran-kampus.show', $setoran) }}" class="btn btn-outline-primary text-start">Setoran Kampus: {{ $setoran->kode_setoran_kampus }}</a>
                 @endforeach
                 @if ($mahasiswa->hasil)
                     <a href="{{ route('hasil.show', $mahasiswa->hasil) }}" class="btn btn-outline-primary text-start">Hasil: {{ $mahasiswa->hasil->kode_hasil }}</a><a href="{{ route('hasil.edit', $mahasiswa->hasil) }}" class="btn btn-outline-secondary text-start">Update Hasil</a>

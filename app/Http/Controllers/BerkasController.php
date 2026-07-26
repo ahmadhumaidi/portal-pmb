@@ -15,7 +15,6 @@ class BerkasController extends Controller
 
     private array $fileFields = [
         'ijazah' => ['column' => 'ijazah_path', 'drive_url_column' => 'ijazah_drive_url', 'label' => 'Ijazah'],
-        'transkrip_awal' => ['column' => 'transkrip_awal_path', 'drive_url_column' => 'transkrip_awal_drive_url', 'label' => 'Transkrip Awal'],
         'ktp' => ['column' => 'ktp_path', 'drive_url_column' => 'ktp_drive_url', 'label' => 'KTP'],
         'kk' => ['column' => 'kk_path', 'drive_url_column' => 'kk_drive_url', 'label' => 'KK'],
         'pas_foto' => ['column' => 'pas_foto_path', 'drive_url_column' => 'pas_foto_drive_url', 'label' => 'Pas Foto'],
@@ -105,11 +104,10 @@ class BerkasController extends Controller
 
     public function update(Request $request, Berkas $berkas): RedirectResponse
     {
-        $berkas->loadMissing('mahasiswa');
+        $berkas->loadMissing('mahasiswa.pembayarans');
 
         $validated = $request->validate([
             'ijazah' => ['nullable', 'file', 'max:5120'],
-            'transkrip_awal' => ['nullable', 'file', 'max:5120'],
             'ktp' => ['nullable', 'file', 'max:5120'],
             'kk' => ['nullable', 'file', 'max:5120'],
             'pas_foto' => ['nullable', 'file', 'image', 'max:5120'],
@@ -132,10 +130,30 @@ class BerkasController extends Controller
             }
         }
 
-        unset($validated['ijazah'], $validated['transkrip_awal'], $validated['ktp'], $validated['kk'], $validated['pas_foto']);
+        unset($validated['ijazah'], $validated['ktp'], $validated['kk'], $validated['pas_foto']);
 
         $berkas->update($validated);
 
+        $pembayaran = $berkas->mahasiswa->pembayarans->firstWhere('jenis_pembayaran', 'Pendaftaran')
+            ?? $berkas->mahasiswa->pembayarans->first();
+
+        if ($pembayaran) {
+            return redirect()->route('pembayaran.edit', $pembayaran)->with('success', 'Berkas mahasiswa berhasil diperbarui. Silakan lengkapi pembayaran.');
+        }
+
         return redirect()->route('berkas.show', $berkas)->with('success', 'Berkas mahasiswa berhasil diperbarui.');
+    }
+
+    public function destroy(Berkas $berkas): RedirectResponse
+    {
+        foreach ($this->fileFields as $meta) {
+            if ($berkas->{$meta['column']}) {
+                Storage::disk('public')->delete($berkas->{$meta['column']});
+            }
+        }
+
+        $berkas->delete();
+
+        return redirect()->route('berkas.index')->with('success', 'Data berkas berhasil dihapus.');
     }
 }

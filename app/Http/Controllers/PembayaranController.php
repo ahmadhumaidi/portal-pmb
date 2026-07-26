@@ -14,6 +14,10 @@ class PembayaranController extends Controller
 {
     private array $statuses = ['menunggu', 'terverifikasi', 'ditolak', 'dibatalkan'];
 
+    private array $fileFields = [
+        'bukti_bayar' => ['column' => 'bukti_bayar_path', 'drive_url_column' => 'bukti_bayar_drive_url', 'label' => 'Bukti Bayar'],
+    ];
+
     public function index(Request $request): View
     {
         $search = trim((string) $request->query('search'));
@@ -68,8 +72,9 @@ class PembayaranController extends Controller
             'catatan' => ['nullable', 'string'],
         ]);
 
+        $mahasiswa = Mahasiswa::findOrFail($validated['mahasiswa_id']);
+
         if ($request->hasFile('bukti_bayar')) {
-            $mahasiswa = Mahasiswa::findOrFail($validated['mahasiswa_id']);
             $validated['bukti_bayar_path'] = $request->file('bukti_bayar')->store('pembayaran/' . $mahasiswa->kode_pmb, 'public');
         }
 
@@ -92,18 +97,74 @@ class PembayaranController extends Controller
         return view('pembayaran.show', compact('pembayaran'));
     }
 
-    public function viewFile(Pembayaran $pembayaran): BinaryFileResponse|RedirectResponse
+    public function edit(Pembayaran $pembayaran): View
     {
-        $path = $pembayaran->bukti_bayar_path;
+        $pembayaran->load('mahasiswa.kampus');
+        $statuses = $this->statuses;
 
-        abort_if(blank($path), 404, 'Bukti bayar belum tersedia.');
+        return view('pembayaran.edit', compact('pembayaran', 'statuses'));
+    }
+
+    public function update(Request $request, Pembayaran $pembayaran): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nominal' => ['required', 'numeric', 'min:0'],
+            'status_bayar' => ['required', 'in:' . implode(',', $this->statuses)],
+            'bukti_bayar' => ['nullable', 'file', 'max:5120'],
+            'catatan' => ['nullable', 'string'],
+        ]);
+
+        $pembayaran->loadMissing('mahasiswa');
+
+        if ($request->hasFile('bukti_bayar')) {
+            if ($pembayaran->bukti_bayar_path) {
+                Storage::disk('public')->delete($pembayaran->bukti_bayar_path);
+            }
+
+            $validated['bukti_bayar_path'] = $request->file('bukti_bayar')->store('pembayaran/' . $pembayaran->mahasiswa->kode_pmb, 'public');
+            $validated['bukti_bayar_drive_url'] = null;
+        }
+
+        unset($validated['bukti_bayar']);
+
+        if ($validated['status_bayar'] === 'terverifikasi' && $pembayaran->status_bayar !== 'terverifikasi') {
+            $validated['verified_by'] = auth()->id();
+            $validated['verified_at'] = now();
+        }
+
+        $pembayaran->update($validated);
+
+        return redirect()->route('pembayaran.show', $pembayaran)->with('success', 'Pembayaran berhasil diperbarui.');
+    }
+
+    public function destroy(Pembayaran $pembayaran): RedirectResponse
+    {
+        if ($pembayaran->bukti_bayar_path) {
+            Storage::disk('public')->delete($pembayaran->bukti_bayar_path);
+        }
+
+        $pembayaran->delete();
+
+        return redirect()->route('pembayaran.index')->with('success', 'Data pembayaran berhasil dihapus.');
+    }
+
+    public function viewFile(Pembayaran $pembayaran, string $field = 'bukti_bayar'): BinaryFileResponse|RedirectResponse
+    {
+        abort_unless(isset($this->fileFields[$field]), 404);
+
+        $meta = $this->fileFields[$field];
+        $path = $pembayaran->{$meta['column']};
+
+        abort_if(blank($path), 404, 'File belum tersedia.');
 
         if (Storage::disk('public')->exists($path)) {
             return response()->file(Storage::disk('public')->path($path));
         }
 
-        if (filled($pembayaran->bukti_bayar_drive_url)) {
-            return redirect()->away($pembayaran->bukti_bayar_drive_url);
+        $driveFileUrl = $meta['drive_url_column'] ? $pembayaran->{$meta['drive_url_column']} : null;
+
+        if (filled($driveFileUrl)) {
+            return redirect()->away($driveFileUrl);
         }
 
         $pembayaran->loadMissing('mahasiswa');

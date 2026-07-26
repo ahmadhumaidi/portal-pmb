@@ -73,7 +73,14 @@
                                 <div class="small text-muted">{{ $mahasiswa->email ?? '-' }}</div>
                             </td>
                             <td><span class="badge text-bg-info">{{ ucfirst(str_replace('_', ' ', $mahasiswa->status_pendaftaran)) }}</span></td>
-                            <td><a href="{{ route('mahasiswa.show', $mahasiswa) }}" class="btn btn-sm btn-outline-primary">Detail</a></td>
+                            <td class="d-flex gap-1">
+                                <a href="{{ route('mahasiswa.show', $mahasiswa) }}" class="btn btn-sm btn-outline-primary">Detail</a>
+                                <form action="{{ route('mahasiswa.destroy', $mahasiswa) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus data mahasiswa ini? Berkas dan pembayaran yang terkait akan ikut terhapus.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
                         <tr><td colspan="9" class="text-center py-5 text-muted">Belum ada data mahasiswa.</td></tr>
