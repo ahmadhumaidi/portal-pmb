@@ -17,7 +17,6 @@ class GoogleDriveLinkLegacy extends Command
 
     private const BERKAS_TYPE_COLUMNS = [
         'IJAZAH' => 'ijazah_drive_url',
-        'TRANSKRIP' => 'transkrip_awal_drive_url',
         'KTP' => 'ktp_drive_url',
         'KK' => 'kk_drive_url',
         'FOTO' => 'pas_foto_drive_url',

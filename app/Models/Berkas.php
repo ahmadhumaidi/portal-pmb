@@ -20,8 +20,6 @@ class Berkas extends Model
         'input_by',
         'ijazah_path',
         'ijazah_drive_url',
-        'transkrip_awal_path',
-        'transkrip_awal_drive_url',
         'ktp_path',
         'ktp_drive_url',
         'kk_path',
