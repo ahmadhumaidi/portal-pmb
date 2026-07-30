@@ -46,7 +46,7 @@ class HasilController extends Controller
             })
             ->when($status, fn ($query) => $query->where('status_kirim', $status))
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $statuses = $this->statuses;

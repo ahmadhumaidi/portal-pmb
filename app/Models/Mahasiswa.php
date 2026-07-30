@@ -145,6 +145,39 @@ class Mahasiswa extends Model
 
         return (float) $this->harga_kesepakatan - $biayaKampus;
     }
+
+    public function totalDibayarMahasiswa(): float
+    {
+        return (float) $this->pembayarans
+            ->where('status_bayar', 'terverifikasi')
+            ->sum('nominal');
+    }
+
+    public function totalTagihan(): float
+    {
+        return (float) $this->harga_kesepakatan - $this->totalDibayarMahasiswa();
+    }
+
+    public function sudahLunas(): bool
+    {
+        return $this->totalTagihan() <= 0;
+    }
+
+    public function totalSetorKampus(): float
+    {
+        return (float) $this->setoranKampus->sum('nominal');
+    }
+
+    public function kewajibanKampus(): ?float
+    {
+        $biayaKampus = $this->resolvedBiayaKampus();
+
+        if ($biayaKampus === null) {
+            return null;
+        }
+
+        return $biayaKampus - $this->totalSetorKampus();
+    }
 }
 
 

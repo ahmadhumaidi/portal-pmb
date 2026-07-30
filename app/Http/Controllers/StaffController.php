@@ -36,7 +36,7 @@ class StaffController extends Controller
                 $query->where('role', $role);
             })
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $roles = ['admin', 'operator', 'keuangan', 'pimpinan'];

@@ -19,6 +19,19 @@
     </div>
 @endif
 
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-circle me-2"></i>
+        {{ session('error') }}
+
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+        ></button>
+    </div>
+@endif
+
 <div class="card dashboard-card border-0">
 
     <div class="card-header flex-wrap gap-3">
@@ -116,7 +129,7 @@
                             </td>
 
                             <td>
-                                <span class="badge text-bg-light border text-dark">{{ $jurusan->mahasiswas_count }}</span>
+                                <a href="{{ route('jurusan.show', $jurusan) }}" class="badge text-bg-light border text-dark text-decoration-none">{{ $jurusan->mahasiswas_count }}</a>
                             </td>
 
                             <td>
@@ -129,8 +142,15 @@
 
                             <td class="text-end">
                                 <a
-                                    href="{{ route('jurusan.edit', $jurusan) }}"
+                                    href="{{ route('jurusan.show', $jurusan) }}"
                                     class="btn btn-sm btn-outline-primary"
+                                >
+                                    Detail
+                                </a>
+
+                                <a
+                                    href="{{ route('jurusan.edit', $jurusan) }}"
+                                    class="btn btn-sm btn-outline-secondary"
                                 >
                                     <i class="bi bi-pencil"></i>
                                 </a>
@@ -165,7 +185,8 @@
             </table>
         </div>
 
-        <div class="mt-3">
+        <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            @include('partials.per-page-select')
             {{ $jurusans->links() }}
         </div>
 

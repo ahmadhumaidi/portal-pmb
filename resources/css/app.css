@@ -27,7 +27,8 @@ body {
 
 .sidebar {
     width: 260px;
-    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
     background: var(--sidebar-bg);
     color: white;
     position: fixed;
@@ -68,6 +69,7 @@ body {
 .sidebar-menu {
     padding: 16px 12px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .sidebar-section {
@@ -442,7 +444,7 @@ nav[role="navigation"] > div:first-child {
 
 .detail-list {
     display: grid;
-    grid-template-columns: minmax(160px, 240px) 1fr;
+    grid-template-columns: minmax(120px, 200px) minmax(0, 1fr);
     gap: 10px 18px;
 }
 
@@ -455,6 +457,21 @@ nav[role="navigation"] > div:first-child {
 .detail-value {
     min-width: 0;
     overflow-wrap: anywhere;
+}
+
+@media (max-width: 576px) {
+    .detail-list {
+        grid-template-columns: 1fr;
+        gap: 2px 0;
+    }
+
+    .detail-label {
+        margin-top: 10px;
+    }
+
+    .detail-label:first-child {
+        margin-top: 0;
+    }
 }
 
 .file-path {

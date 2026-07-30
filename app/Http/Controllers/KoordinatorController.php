@@ -24,7 +24,7 @@ class KoordinatorController extends Controller
                 });
             })
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return view('master.koordinator.index', compact('koordinators', 'search'));
@@ -61,6 +61,19 @@ class KoordinatorController extends Controller
         return redirect()
             ->route('koordinator.index')
             ->with('success', 'Data koordinator berhasil ditambahkan.');
+    }
+
+    public function show(Request $request, Koordinator $koordinator): View
+    {
+        $showAll = $request->boolean('semua');
+
+        $mahasiswas = $koordinator->mahasiswas()
+            ->with(['kampus', 'jurusan'])
+            ->orderBy('nama_mahasiswa')
+            ->paginate($showAll ? $koordinator->mahasiswas()->count() ?: 1 : 10)
+            ->withQueryString();
+
+        return view('master.koordinator.show', compact('koordinator', 'mahasiswas', 'showAll'));
     }
 
     public function edit(Koordinator $koordinator): View

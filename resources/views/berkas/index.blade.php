@@ -37,7 +37,7 @@
             @empty
                 <tr><td colspan="10" class="text-center py-5 text-muted">Belum ada data berkas.</td></tr>
             @endforelse
-        </tbody></table></div><div class="mt-3">{{ $berkas->links() }}</div>
+        </tbody></table></div><div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">@include('partials.per-page-select'){{ $berkas->links() }}</div>
     </div>
 </div>
 @endsection

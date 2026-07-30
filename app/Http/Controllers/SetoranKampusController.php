@@ -30,7 +30,7 @@ class SetoranKampusController extends Controller
                 });
             })
             ->latest('tanggal_setor')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return view('setoran-kampus.index', compact('setoranKampus', 'search'));

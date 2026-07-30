@@ -70,7 +70,7 @@
 
 <div class="row g-4">
 
-    <div class="col-xl-8">
+    <div class="col-12 col-xl-8">
         <div class="card dashboard-card border-0">
             <div class="card-header">
                 <div>
@@ -95,7 +95,7 @@
         </div>
     </div>
 
-    <div class="col-xl-4">
+    <div class="col-12 col-xl-4">
         <div class="card dashboard-card border-0">
             <div class="card-header">
                 <div>

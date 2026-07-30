@@ -24,5 +24,5 @@
 <td><a href="{{ route('hasil.show', $hasil) }}" class="btn btn-sm btn-outline-primary">Detail</a></td>
 </tr>
 @empty<tr><td colspan="12" class="text-center py-5 text-muted">Belum ada data hasil.</td></tr>@endforelse
-</tbody></table></div><div class="mt-3">{{ $hasils->links() }}</div></div></div>
+</tbody></table></div><div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">@include('partials.per-page-select'){{ $hasils->links() }}</div></div></div>
 @endsection

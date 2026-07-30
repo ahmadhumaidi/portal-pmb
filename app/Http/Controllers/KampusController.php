@@ -24,7 +24,7 @@ class KampusController extends Controller
                 });
             })
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return view('master.kampus.index', compact('kampuses', 'search'));

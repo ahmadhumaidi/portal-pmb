@@ -11,10 +11,16 @@
             <h5>Daftar Mahasiswa</h5>
             <small>Ringkasan calon mahasiswa dan status proses</small>
         </div>
-        <a href="{{ route('mahasiswa.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>
-            Tambah Mahasiswa
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('mahasiswa.trash') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-trash me-1"></i>
+                Sampah
+            </a>
+            <a href="{{ route('mahasiswa.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>
+                Tambah Mahasiswa
+            </a>
+        </div>
     </div>
 
     <div class="card-body">
@@ -41,37 +47,28 @@
                 <thead>
                     <tr>
                         <th>No.</th>
-                        <th>Kode</th>
                         <th>Nama</th>
-                        <th>NIK</th>
                         <th>Kampus</th>
                         <th>Jurusan</th>
-                        <th>Kontak</th>
+                        <th>Total Tagihan</th>
+                        <th>Kewajiban ke Kampus</th>
                         <th>Status</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($mahasiswas as $mahasiswa)
+                        @php
+                            $totalTagihan = $mahasiswa->totalTagihan();
+                            $kewajibanKampus = $mahasiswa->kewajibanKampus();
+                        @endphp
                         <tr>
                             <td>{{ $mahasiswas->firstItem() + $loop->index }}</td>
-                            <td>
-                                <span class="badge text-bg-light border text-dark">{{ $mahasiswa->kode_pmb }}</span>
-                            </td>
-                            <td>
-                                <div>{{ $mahasiswa->nama_mahasiswa }}</div>
-                                <div class="small text-muted">{{ $mahasiswa->asal_sekolah ?? '-' }}</div>
-                            </td>
-                            <td>
-                                <div>{{ $mahasiswa->nik ?? '-' }}</div>
-                                <div class="small text-muted">NISN: {{ $mahasiswa->nisn ?? '-' }}</div>
-                            </td>
+                            <td>{{ $mahasiswa->nama_mahasiswa }}</td>
                             <td>{{ $mahasiswa->kampus->nama_kampus ?? '-' }}</td>
                             <td>{{ $mahasiswa->jurusan->nama_jurusan ?? '-' }}</td>
-                            <td>
-                                <div>{{ $mahasiswa->nomor_whatsapp ?? '-' }}</div>
-                                <div class="small text-muted">{{ $mahasiswa->email ?? '-' }}</div>
-                            </td>
+                            <td class="{{ $totalTagihan > 0 ? 'text-danger' : 'text-success' }} fw-semibold">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</td>
+                            <td class="{{ $kewajibanKampus !== null && $kewajibanKampus > 0 ? 'text-danger' : 'text-success' }} fw-semibold">{{ $kewajibanKampus !== null ? 'Rp ' . number_format($kewajibanKampus, 0, ',', '.') : '-' }}</td>
                             <td><span class="badge text-bg-info">{{ ucfirst(str_replace('_', ' ', $mahasiswa->status_pendaftaran)) }}</span></td>
                             <td class="d-flex gap-1">
                                 <a href="{{ route('mahasiswa.show', $mahasiswa) }}" class="btn btn-sm btn-outline-primary">Detail</a>
@@ -83,13 +80,16 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="text-center py-5 text-muted">Belum ada data mahasiswa.</td></tr>
+                        <tr><td colspan="8" class="text-center py-5 text-muted">Belum ada data mahasiswa.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="mt-3">{{ $mahasiswas->links() }}</div>
+        <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            @include('partials.per-page-select')
+            {{ $mahasiswas->links() }}
+        </div>
     </div>
 </div>
 @endsection

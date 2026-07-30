@@ -116,7 +116,9 @@
                             </td>
 
                             <td>
-                                {{ $koordinator->mahasiswas()->count() }}
+                                <a href="{{ route('koordinator.show', $koordinator) }}" class="badge text-bg-light border text-dark text-decoration-none">
+                                    {{ $koordinator->mahasiswas()->count() }}
+                                </a>
                             </td>
 
                             <td>
@@ -133,8 +135,16 @@
 
                             <td class="text-end">
                                 <a
-                                    href="{{ route('koordinator.edit', $koordinator) }}"
+                                    href="{{ route('koordinator.show', $koordinator) }}"
                                     class="btn btn-sm btn-outline-primary"
+                                    title="Detail"
+                                >
+                                    Detail
+                                </a>
+
+                                <a
+                                    href="{{ route('koordinator.edit', $koordinator) }}"
+                                    class="btn btn-sm btn-outline-secondary"
                                     title="Edit"
                                 >
                                     <i class="bi bi-pencil"></i>
@@ -171,7 +181,8 @@
             </table>
         </div>
 
-        <div class="mt-3">
+        <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            @include('partials.per-page-select')
             {{ $koordinators->links() }}
         </div>
 

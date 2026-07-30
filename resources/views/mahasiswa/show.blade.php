@@ -47,7 +47,7 @@
 </div>
 
 <div class="row g-4">
-    <div class="col-xl-8">
+    <div class="col-12 col-xl-8">
         <div class="card dashboard-card border-0">
             <div class="card-header"><div><h5>Data Lengkap Mahasiswa</h5><small>Semua field yang tersedia dari database</small></div></div>
             <div class="card-body">
@@ -61,18 +61,43 @@
         </div>
     </div>
 
-    <div class="col-xl-4">
+    <div class="col-12 col-xl-4">
         @php
             $biayaKampus = $mahasiswa->resolvedBiayaKampus();
             $keuntungan = $mahasiswa->keuntungan();
+            $totalTagihan = $mahasiswa->totalTagihan();
+            $totalDibayarMahasiswa = $mahasiswa->totalDibayarMahasiswa();
+            $totalSetorKampus = $mahasiswa->totalSetorKampus();
+            $kewajibanKampus = $mahasiswa->kewajibanKampus();
         @endphp
         <div class="card dashboard-card border-0 mb-4">
-            <div class="card-header"><div><h5>Rekap Keuangan</h5><small>Harga kesepakatan dikurangi biaya kampus</small></div></div>
+            <div class="card-header"><div><h5>Tagihan Mahasiswa</h5><small>Harga kesepakatan dikurangi pembayaran yang sudah masuk</small></div></div>
             <div class="card-body detail-list">
+                <div class="detail-label">Status Pembayaran</div>
+                <div class="detail-value">
+                    @if ($mahasiswa->sudahLunas())
+                        <span class="badge text-bg-success">LUNAS</span>
+                    @else
+                        <span class="badge text-bg-warning">Belum Lunas</span>
+                    @endif
+                </div>
                 <div class="detail-label">Harga Kesepakatan</div>
                 <div class="detail-value">Rp {{ number_format($mahasiswa->harga_kesepakatan, 0, ',', '.') }}</div>
+                <div class="detail-label">Sudah Dibayar Mahasiswa</div>
+                <div class="detail-value">Rp {{ number_format($totalDibayarMahasiswa, 0, ',', '.') }}</div>
+                <div class="detail-label">Total Tagihan</div>
+                <div class="detail-value fw-semibold {{ $totalTagihan > 0 ? 'text-danger' : 'text-success' }}">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</div>
+            </div>
+        </div>
+        <div class="card dashboard-card border-0 mb-4">
+            <div class="card-header"><div><h5>Tagihan ke Kampus</h5><small>Biaya kampus dikurangi setoran yang sudah dibayar</small></div></div>
+            <div class="card-body detail-list">
                 <div class="detail-label">Biaya Kampus</div>
                 <div class="detail-value">{{ $biayaKampus !== null ? 'Rp ' . number_format($biayaKampus, 0, ',', '.') : 'Belum diatur' }}</div>
+                <div class="detail-label">Sudah Disetor ke Kampus</div>
+                <div class="detail-value">Rp {{ number_format($totalSetorKampus, 0, ',', '.') }}</div>
+                <div class="detail-label">Kewajiban ke Kampus</div>
+                <div class="detail-value fw-semibold {{ $kewajibanKampus !== null && $kewajibanKampus > 0 ? 'text-danger' : 'text-success' }}">{{ $kewajibanKampus !== null ? 'Rp ' . number_format($kewajibanKampus, 0, ',', '.') : '-' }}</div>
                 <div class="detail-label">Keuntungan</div>
                 <div class="detail-value fw-semibold {{ $keuntungan !== null && $keuntungan < 0 ? 'text-danger' : 'text-success' }}">{{ $keuntungan !== null ? 'Rp ' . number_format($keuntungan, 0, ',', '.') : '-' }}</div>
             </div>
@@ -83,15 +108,55 @@
                 @if ($mahasiswa->berkas)
                     <a href="{{ route('berkas.show', $mahasiswa->berkas) }}" class="btn btn-outline-primary text-start">Berkas: {{ $mahasiswa->berkas->kode_berkas }}</a><a href="{{ route('berkas.edit', $mahasiswa->berkas) }}" class="btn btn-outline-secondary text-start">Upload Berkas</a>
                 @endif
-                <a href="{{ route('pembayaran.create', ['mahasiswa_id' => $mahasiswa->id]) }}" class="btn btn-outline-success text-start">Input Pembayaran Manual</a>@foreach ($mahasiswa->pembayarans as $pembayaran)
-                    <a href="{{ route('pembayaran.show', $pembayaran) }}" class="btn btn-outline-primary text-start">Pembayaran: {{ $pembayaran->kode_pembayaran }}</a>
-                @endforeach
+                <a href="{{ route('pembayaran.create', ['mahasiswa_id' => $mahasiswa->id]) }}" class="btn btn-outline-success text-start">Input Pembayaran Manual</a>
                 <a href="{{ route('setoran-kampus.create', ['mahasiswa_id' => $mahasiswa->id]) }}" class="btn btn-outline-success text-start">Input Setoran ke Kampus</a>@foreach ($mahasiswa->setoranKampus as $setoran)
                     <a href="{{ route('setoran-kampus.show', $setoran) }}" class="btn btn-outline-primary text-start">Setoran Kampus: {{ $setoran->kode_setoran_kampus }}</a>
                 @endforeach
                 @if ($mahasiswa->hasil)
                     <a href="{{ route('hasil.show', $mahasiswa->hasil) }}" class="btn btn-outline-primary text-start">Hasil: {{ $mahasiswa->hasil->kode_hasil }}</a><a href="{{ route('hasil.edit', $mahasiswa->hasil) }}" class="btn btn-outline-secondary text-start">Update Hasil</a>
                 @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-0">
+    <div class="col-12">
+        <div class="card dashboard-card border-0">
+            <div class="card-header"><div><h5>Riwayat Pembayaran</h5><small>Progres angsuran sampai pelunasan</small></div></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Jenis</th>
+                                <th>Angsuran</th>
+                                <th>Tanggal Bayar</th>
+                                <th>Nominal</th>
+                                <th>Status</th>
+                                <th>Bukti</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($mahasiswa->pembayarans->sortBy(['angsuran_ke', 'tanggal_bayar']) as $pembayaran)
+                                <tr>
+                                    <td><span class="badge text-bg-light border text-dark">{{ $pembayaran->kode_pembayaran }}</span></td>
+                                    <td>{{ $pembayaran->jenis_pembayaran }}</td>
+                                    <td>{{ $pembayaran->angsuran_ke ?? '-' }}</td>
+                                    <td>{{ optional($pembayaran->tanggal_bayar)->format('d M Y') ?? '-' }}</td>
+                                    <td>Rp {{ number_format($pembayaran->nominal, 0, ',', '.') }}</td>
+                                    <td><span class="badge text-bg-info">{{ ucfirst(str_replace('_', ' ', $pembayaran->status_bayar)) }}</span></td>
+                                    <td class="small">{{ $pembayaran->bukti_bayar_path ? 'Ada' : '-' }}</td>
+                                    <td><a href="{{ route('pembayaran.show', $pembayaran) }}" class="btn btn-sm btn-outline-primary">Detail</a></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="8" class="text-center py-5 text-muted">Belum ada pembayaran.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

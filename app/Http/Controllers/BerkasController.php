@@ -45,7 +45,7 @@ class BerkasController extends Controller
             })
             ->when($status, fn ($query) => $query->where('status_verifikasi', $status))
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $statuses = $this->statuses;

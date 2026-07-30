@@ -35,7 +35,7 @@ class BiayaKampusController extends Controller
             })
             ->when($kampusId, fn ($query) => $query->where('kampus_id', $kampusId))
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $kampuses = Kampus::query()->orderBy('nama_kampus')->get();

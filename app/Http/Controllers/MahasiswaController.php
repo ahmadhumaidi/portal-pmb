@@ -8,7 +8,6 @@ use App\Models\Jurusan;
 use App\Models\Kampus;
 use App\Models\Koordinator;
 use App\Models\Mahasiswa;
-use App\Models\Pembayaran;
 use App\Models\Staff;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +26,13 @@ class MahasiswaController extends Controller
         $status = $request->query('status');
 
         $mahasiswas = Mahasiswa::query()
-            ->with(['kampus', 'jurusan', 'picStaff'])
+            ->with([
+                'kampus',
+                'jurusan',
+                'picStaff',
+                'pembayarans:id,mahasiswa_id,status_bayar,nominal',
+                'setoranKampus:id,mahasiswa_id,nominal',
+            ])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
@@ -43,7 +48,7 @@ class MahasiswaController extends Controller
             })
             ->when($status, fn ($query) => $query->where('status_pendaftaran', $status))
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $statuses = $this->statuses;
@@ -84,15 +89,6 @@ class MahasiswaController extends Controller
                 )
             );
 
-            Pembayaran::firstOrCreate([
-                'mahasiswa_id' => $mahasiswa->id,
-                'jenis_pembayaran' => 'Pendaftaran',
-            ], [
-                'input_by' => $inputBy,
-                'tanggal_bayar' => now()->toDateString(),
-                'nominal' => $validated['harga_kesepakatan'],
-                'status_bayar' => 'menunggu',
-            ]);
             Hasil::firstOrCreate(['mahasiswa_id' => $mahasiswa->id], ['input_by' => $inputBy, 'status_kirim' => 'belum_siap']);
         });
 
@@ -197,6 +193,40 @@ class MahasiswaController extends Controller
         });
 
         return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa beserta berkas dan pembayarannya berhasil dihapus.');
+    }
+
+    public function trash(Request $request): View
+    {
+        $search = trim((string) $request->query('search'));
+
+        $mahasiswas = Mahasiswa::onlyTrashed()
+            ->with(['kampus', 'jurusan'])
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery
+                        ->where('nama_mahasiswa', 'like', "%{$search}%")
+                        ->orWhere('kode_pmb', 'like', "%{$search}%");
+                });
+            })
+            ->latest('deleted_at')
+            ->paginate($this->resolvePerPage($request))
+            ->withQueryString();
+
+        return view('mahasiswa.trash', compact('mahasiswas', 'search'));
+    }
+
+    public function restore(Mahasiswa $mahasiswa): RedirectResponse
+    {
+        $mahasiswa->restore();
+
+        return redirect()->route('mahasiswa.trash')->with('success', 'Data mahasiswa berhasil dipulihkan.');
+    }
+
+    public function forceDelete(Mahasiswa $mahasiswa): RedirectResponse
+    {
+        $mahasiswa->forceDelete();
+
+        return redirect()->route('mahasiswa.trash')->with('success', 'Data mahasiswa berhasil dihapus permanen.');
     }
 
     private function formData(): array

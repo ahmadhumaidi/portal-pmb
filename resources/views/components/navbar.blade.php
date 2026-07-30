@@ -60,10 +60,13 @@
                 <li><hr class="dropdown-divider"></li>
 
                 <li>
-                    <a class="dropdown-item text-danger" href="#">
-                        <i class="bi bi-box-arrow-right me-2"></i>
-                        Keluar
-                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="dropdown-item text-danger">
+                            <i class="bi bi-box-arrow-right me-2"></i>
+                            Keluar
+                        </button>
+                    </form>
                 </li>
             </ul>
         </div>

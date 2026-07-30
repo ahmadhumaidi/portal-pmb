@@ -114,6 +114,37 @@
         </a>
 
         <div class="sidebar-section">Sistem</div>
+        <a
+            href="{{ route('landing.admin.edit') }}"
+            class="sidebar-link {{ request()->routeIs('landing.admin.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-window"></i>
+            <span>Landing Page</span>
+        </a>
+
+        <a
+            href="{{ route('landing.registrations.index') }}"
+            class="sidebar-link {{ request()->routeIs('landing.registrations.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-inbox"></i>
+            <span>Pendaftar Landing</span>
+        </a>
+
+        <a
+            href="{{ route('landing.registrations.index') }}"
+            class="sidebar-link {{ request()->routeIs('landing.registrations.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-inbox"></i>
+            <span>Pendaftar Landing</span>
+        </a>
+
+        <a
+            href="{{ route('landing.registrations.index') }}"
+            class="sidebar-link {{ request()->routeIs('landing.registrations.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-inbox"></i>
+            <span>Pendaftar Landing</span>
+        </a>
 
         <a
             href="{{ route('laporan.index') }}"
@@ -138,4 +169,3 @@
     </div>
 
 </aside>
-

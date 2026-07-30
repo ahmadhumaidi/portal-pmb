@@ -42,7 +42,7 @@ class PembayaranController extends Controller
             })
             ->when($status, fn ($query) => $query->where('status_bayar', $status))
             ->latest('tanggal_bayar')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $statuses = $this->statuses;
@@ -52,19 +52,29 @@ class PembayaranController extends Controller
 
     public function create(Request $request): View
     {
-        $mahasiswas = Mahasiswa::query()->with(['kampus', 'jurusan'])->orderBy('nama_mahasiswa')->get();
+        $mahasiswas = Mahasiswa::query()
+            ->with(['kampus', 'jurusan', 'pembayarans:id,mahasiswa_id,jenis_pembayaran,angsuran_ke'])
+            ->orderBy('nama_mahasiswa')
+            ->get();
         $selectedMahasiswa = $request->query('mahasiswa_id');
         $statuses = $this->statuses;
 
-        return view('pembayaran.create', compact('mahasiswas', 'selectedMahasiswa', 'statuses'));
+        $usedAngsuran = $mahasiswas->mapWithKeys(fn (Mahasiswa $mahasiswa) => [
+            $mahasiswa->id => $mahasiswa->pembayarans
+                ->where('jenis_pembayaran', 'Angsuran')
+                ->pluck('angsuran_ke')
+                ->filter()
+                ->values(),
+        ]);
+
+        return view('pembayaran.create', compact('mahasiswas', 'selectedMahasiswa', 'statuses', 'usedAngsuran'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'mahasiswa_id' => ['required', 'exists:mahasiswas,id'],
-            'jenis_pembayaran' => ['required', 'string', 'max:255'],
-            'angsuran_ke' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'angsuran_ke' => ['required', 'integer', 'min:1', 'max:99'],
             'tanggal_bayar' => ['required', 'date'],
             'nominal' => ['required', 'numeric', 'min:0'],
             'status_bayar' => ['required', 'in:' . implode(',', $this->statuses)],
@@ -79,6 +89,7 @@ class PembayaranController extends Controller
         }
 
         unset($validated['bukti_bayar']);
+        $validated['jenis_pembayaran'] = 'Angsuran';
         $validated['input_by'] = auth()->id();
         if ($validated['status_bayar'] === 'terverifikasi') {
             $validated['verified_by'] = auth()->id();

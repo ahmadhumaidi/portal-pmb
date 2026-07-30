@@ -80,7 +80,10 @@
             </table>
         </div>
 
-        <div class="mt-3">{{ $staffs->links() }}</div>
+        <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            @include('partials.per-page-select')
+            {{ $staffs->links() }}
+        </div>
     </div>
 </div>
 @endsection

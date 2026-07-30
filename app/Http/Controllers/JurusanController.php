@@ -37,7 +37,7 @@ class JurusanController extends Controller
                 $query->where('kampus_id', $kampusId);
             })
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $kampuses = Kampus::query()
@@ -98,6 +98,19 @@ class JurusanController extends Controller
             ->with('success', 'Data jurusan berhasil ditambahkan.');
     }
 
+    public function show(Request $request, Jurusan $jurusan): View
+    {
+        $showAll = $request->boolean('semua');
+
+        $mahasiswas = $jurusan->mahasiswas()
+            ->with('kampus')
+            ->orderBy('nama_mahasiswa')
+            ->paginate($showAll ? $jurusan->mahasiswas()->count() ?: 1 : 10)
+            ->withQueryString();
+
+        return view('master.jurusan.show', compact('jurusan', 'mahasiswas', 'showAll'));
+    }
+
     public function edit(Jurusan $jurusan): View
     {
         $kampuses = Kampus::query()
@@ -153,6 +166,12 @@ class JurusanController extends Controller
 
     public function destroy(Jurusan $jurusan): RedirectResponse
     {
+        if ($jurusan->mahasiswas()->withTrashed()->exists()) {
+            return redirect()
+                ->route('jurusan.index')
+                ->with('error', 'Jurusan tidak dapat dihapus karena masih memiliki mahasiswa (termasuk yang sudah dihapus).');
+        }
+
         $jurusan->delete();
 
         return redirect()

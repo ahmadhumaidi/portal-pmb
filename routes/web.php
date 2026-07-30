@@ -6,6 +6,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HasilController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\KampusController;
+use App\Http\Controllers\LandingPageAdminController;
+use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\LandingRegistrationController;
 use App\Http\Controllers\KoordinatorController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\MahasiswaController;
@@ -17,15 +20,24 @@ use App\Http\Controllers\SetoranKampusController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', [LandingPageController::class, 'show'])->name('landing');
+Route::post('/daftar', [LandingRegistrationController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('landing.register');
+
 Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/landing-page/edit', [LandingPageAdminController::class, 'edit'])->name('landing.admin.edit');
+    Route::put('/landing-page', [LandingPageAdminController::class, 'update'])->name('landing.admin.update');
+    Route::get('/pendaftaran-landing', [LandingRegistrationController::class, 'index'])->name('landing.registrations.index');
+    Route::get('/pendaftaran-landing', [LandingRegistrationController::class, 'index'])->name('landing.registrations.index');
+    Route::get('/pendaftaran-landing', [LandingRegistrationController::class, 'index'])->name('landing.registrations.index');
 
     Route::resource('kampus', KampusController::class)
         ->parameters(['kampus' => 'kampus'])
         ->except('show');
 
-    Route::resource('jurusan', JurusanController::class)
-        ->except('show');
+    Route::resource('jurusan', JurusanController::class);
 
     Route::resource('biaya-kampus', BiayaKampusController::class)
         ->parameters(['biaya-kampus' => 'biayaKampus'])
@@ -34,8 +46,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('staff', StaffController::class)
         ->only(['index', 'create', 'store']);
 
-    Route::resource('koordinator', KoordinatorController::class)
-        ->except('show');
+    Route::resource('koordinator', KoordinatorController::class);
+
+    Route::get('mahasiswa-sampah', [MahasiswaController::class, 'trash'])->name('mahasiswa.trash');
+    Route::post('mahasiswa/{mahasiswa}/restore', [MahasiswaController::class, 'restore'])->name('mahasiswa.restore')->withTrashed();
+    Route::delete('mahasiswa/{mahasiswa}/force-delete', [MahasiswaController::class, 'forceDelete'])->name('mahasiswa.force-delete')->withTrashed();
 
     Route::resource('mahasiswa', MahasiswaController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
@@ -78,5 +93,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__ . '/auth.php';
-
-
