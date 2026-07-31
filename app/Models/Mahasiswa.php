@@ -70,7 +70,7 @@ class Mahasiswa extends Authenticatable
                 );
             }
 
-            $mahasiswa->password ??= Hash::make('sukses1');
+            $mahasiswa->password ??= Hash::make('ukcw2026');
         });
     }
 

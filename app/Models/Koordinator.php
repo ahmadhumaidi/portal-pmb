@@ -39,7 +39,7 @@ class Koordinator extends Authenticatable
                 );
             }
 
-            $koordinator->password ??= Hash::make('sukses1');
+            $koordinator->password ??= Hash::make('ukcw2026');
         });
     }
 
