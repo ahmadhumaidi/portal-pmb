@@ -15,7 +15,7 @@
 @endphp
 
 @section('content')
-    <div class="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
+    <div class="portal-card rounded-2xl bg-white p-6 sm:p-8">
         <p class="text-sm font-bold uppercase tracking-wide text-emerald-700">{{ $koordinator->kode_koordinator }}</p>
         <h1 class="mt-2 text-2xl font-black text-slate-900">Hasil Mahasiswa</h1>
         <p class="mt-1 text-sm text-slate-600">{{ $mahasiswas->total() }} mahasiswa yang kamu bawa.</p>

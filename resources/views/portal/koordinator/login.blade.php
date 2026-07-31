@@ -3,8 +3,11 @@
 @section('title', 'Masuk Koordinator')
 
 @section('content')
-    <div class="mx-auto max-w-md">
-        <div class="rounded-2xl bg-white p-8 shadow-sm">
+    <div class="portal-orbit-wrap mx-auto max-w-md">
+        <div class="portal-glow"></div>
+        <div class="portal-orbit portal-orbit-one"></div>
+        <div class="portal-orbit portal-orbit-two"></div>
+        <div class="portal-card rounded-2xl bg-white p-8">
             <h1 class="text-2xl font-black text-slate-900">Portal Koordinator</h1>
             <p class="mt-2 text-sm text-slate-600">Masuk pakai kode koordinator dan password kamu.</p>
 

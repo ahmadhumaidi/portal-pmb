@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.portal-bg {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 12% 10%, rgba(255, 255, 255, .12), transparent 35%),
+        radial-gradient(circle at 88% 20%, rgba(251, 113, 133, .32), transparent 42%),
+        linear-gradient(135deg, #3b0a0a 0%, #7f1d1d 55%, #b91c1c 100%);
+    background-attachment: fixed;
+}
+
+.portal-header {
+    backdrop-filter: blur(8px);
+}
+
+.portal-logo {
+    height: 44px;
+    width: auto;
+}
+
+.portal-card {
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, .62);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, .55);
+    box-shadow: 0 8px 32px rgba(59, 10, 10, .28), inset 0 1px rgba(255, 255, 255, .45);
+}
+
+.portal-footer {
+    border-top: 1px solid rgba(255, 255, 255, .18);
+}
+
+.portal-orbit-wrap {
+    position: relative;
+    isolation: isolate;
+}
+
+.portal-orbit {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 50%;
+    animation: portalOrbitSpin 22s linear infinite;
+}
+
+.portal-orbit::after {
+    content: "";
+    position: absolute;
+    top: 8%;
+    left: 12%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fef08a;
+    box-shadow: 0 0 16px 3px rgba(254, 240, 138, .85);
+}
+
+.portal-orbit-one {
+    width: 340px;
+    height: 340px;
+    top: -120px;
+    right: -120px;
+}
+
+.portal-orbit-two {
+    width: 230px;
+    height: 230px;
+    bottom: -90px;
+    left: -80px;
+    animation-direction: reverse;
+    animation-duration: 17s;
+}
+
+.portal-glow {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    width: 320px;
+    height: 320px;
+    top: -60px;
+    right: -100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251, 113, 133, .55), transparent 70%);
+    filter: blur(10px);
+}
+
+@keyframes portalOrbitSpin {
+    to { transform: rotate(360deg); }
+}

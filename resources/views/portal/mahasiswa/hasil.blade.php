@@ -25,7 +25,7 @@
 @endphp
 
 @section('content')
-    <div class="rounded-2xl bg-white p-8 shadow-sm">
+    <div class="portal-card rounded-2xl bg-white p-8">
         <p class="text-sm font-bold uppercase tracking-wide text-emerald-700">Nomor Seleksi: {{ $mahasiswa->kode_pmb }}</p>
         <h1 class="mt-2 text-2xl font-black text-slate-900">{{ $mahasiswa->nama_mahasiswa }}</h1>
 
