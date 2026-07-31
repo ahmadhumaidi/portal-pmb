@@ -86,10 +86,5 @@
                 @endforeach
             </div>
         </div>
-
-        <div class="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-            <p class="font-bold">Keterangan</p>
-            <p class="mt-1">{{ $mahasiswa->keterangan ?: 'Belum Tersedia' }}</p>
-        </div>
     </div>
 @endsection
