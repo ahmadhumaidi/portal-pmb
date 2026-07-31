@@ -48,7 +48,7 @@
         </dl>
 
         <div class="mt-8">
-            <p class="text-xs font-bold uppercase text-slate-500">Dokumen</p>
+            <p class="text-xs font-bold uppercase text-slate-500">Dokumen Hasil S1</p>
             <div class="mt-3 grid gap-3 sm:grid-cols-3">
                 @foreach($fileFields as $field => $meta)
                     <div class="flex items-center justify-between rounded-xl bg-slate-50 p-4">
@@ -66,11 +66,9 @@
             </div>
         </div>
 
-        @if($mahasiswa->keterangan)
-            <div class="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-                <p class="font-bold">Keterangan</p>
-                <p class="mt-1">{{ $mahasiswa->keterangan }}</p>
-            </div>
-        @endif
+        <div class="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
+            <p class="font-bold">Keterangan</p>
+            <p class="mt-1">{{ $mahasiswa->keterangan ?: 'Belum Tersedia' }}</p>
+        </div>
     </div>
 @endsection
