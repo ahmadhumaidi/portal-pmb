@@ -22,14 +22,12 @@
                 <div>
                     <label for="kode_koordinator" class="block text-sm font-bold text-slate-700">Kode Koordinator</label>
                     <input type="text" id="kode_koordinator" name="kode_koordinator" value="{{ old('kode_koordinator') }}" required autofocus
-                        class="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                        placeholder="KRD-0001">
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200">
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-bold text-slate-700">Password</label>
                     <input type="password" id="password" name="password" required
-                        class="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                        placeholder="Default: sukses1">
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200">
                 </div>
                 <button type="submit" class="w-full rounded-lg bg-emerald-600 px-4 py-3 font-black text-white hover:bg-emerald-700">
                     Masuk
