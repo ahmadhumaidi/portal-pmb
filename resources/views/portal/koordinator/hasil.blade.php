@@ -13,6 +13,12 @@
                     <div class="rounded-xl bg-amber-50 p-4">
                         <p class="font-black text-slate-900">{{ $pengumuman->judul }}</p>
                         <p class="mt-1 text-sm text-slate-700 whitespace-pre-line">{{ $pengumuman->isi }}</p>
+                        @if($pengumuman->lampiran_path)
+                            <a href="{{ route('portal.pengumuman.lampiran', $pengumuman) }}" target="_blank"
+                                class="mt-2 inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:underline">
+                                📎 Lihat Lampiran
+                            </a>
+                        @endif
                         <p class="mt-2 text-xs text-slate-400">{{ $pengumuman->created_at->translatedFormat('d M Y') }}</p>
                     </div>
                 @endforeach

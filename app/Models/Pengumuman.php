@@ -13,6 +13,7 @@ class Pengumuman extends Model
         'judul',
         'isi',
         'status_aktif',
+        'lampiran_path',
         'input_by',
     ];
 

@@ -41,6 +41,10 @@ Route::domain(config('portal.student_domain'))->name('portal.')->group(function 
         Route::get('/koordinator/hasil', [KoordinatorHasilController::class, 'index'])->name('koordinator.hasil');
         Route::get('/koordinator/hasil/{mahasiswa}/file/{field}', [KoordinatorHasilController::class, 'viewFile'])->name('koordinator.hasil.file');
     });
+
+    Route::middleware('auth:mahasiswa,koordinator')->group(function () {
+        Route::get('/pengumuman/{pengumuman}/lampiran', [PengumumanController::class, 'viewFile'])->name('pengumuman.lampiran');
+    });
 });
 
 Route::get('/', [LandingPageController::class, 'show'])->name('landing');
@@ -70,6 +74,8 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'create', 'store']);
 
     Route::resource('koordinator', KoordinatorController::class);
+
+    Route::get('pengumuman/{pengumuman}/lampiran', [PengumumanController::class, 'viewFile'])->name('pengumuman.lampiran');
 
     Route::resource('pengumuman', PengumumanController::class)->except('show');
 

@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Pengumuman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PengumumanController extends Controller
 {
@@ -39,10 +41,17 @@ class PengumumanController extends Controller
             'judul' => ['required', 'string', 'max:255'],
             'isi' => ['required', 'string'],
             'status_aktif' => ['nullable', 'boolean'],
+            'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,pdf', 'max:5120'],
         ]);
 
         $validated['status_aktif'] = $request->boolean('status_aktif', true);
         $validated['input_by'] = auth()->id();
+
+        if ($request->hasFile('lampiran')) {
+            $validated['lampiran_path'] = $request->file('lampiran')->store('pengumuman', 'public');
+        }
+
+        unset($validated['lampiran']);
 
         Pengumuman::create($validated);
 
@@ -62,9 +71,20 @@ class PengumumanController extends Controller
             'judul' => ['required', 'string', 'max:255'],
             'isi' => ['required', 'string'],
             'status_aktif' => ['nullable', 'boolean'],
+            'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,pdf', 'max:5120'],
         ]);
 
         $validated['status_aktif'] = $request->boolean('status_aktif');
+
+        if ($request->hasFile('lampiran')) {
+            if ($pengumuman->lampiran_path) {
+                Storage::disk('public')->delete($pengumuman->lampiran_path);
+            }
+
+            $validated['lampiran_path'] = $request->file('lampiran')->store('pengumuman', 'public');
+        }
+
+        unset($validated['lampiran']);
 
         $pengumuman->update($validated);
 
@@ -75,10 +95,22 @@ class PengumumanController extends Controller
 
     public function destroy(Pengumuman $pengumuman): RedirectResponse
     {
+        if ($pengumuman->lampiran_path) {
+            Storage::disk('public')->delete($pengumuman->lampiran_path);
+        }
+
         $pengumuman->delete();
 
         return redirect()
             ->route('pengumuman.index')
             ->with('success', 'Pengumuman berhasil dihapus.');
+    }
+
+    public function viewFile(Pengumuman $pengumuman): BinaryFileResponse
+    {
+        abort_if(blank($pengumuman->lampiran_path), 404, 'Lampiran belum tersedia.');
+        abort_unless(Storage::disk('public')->exists($pengumuman->lampiran_path), 404);
+
+        return response()->file(Storage::disk('public')->path($pengumuman->lampiran_path));
     }
 }

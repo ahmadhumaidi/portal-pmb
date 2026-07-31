@@ -19,7 +19,7 @@
             </div>
 
             <div class="card-body">
-                <form method="POST" action="{{ route('pengumuman.store') }}">
+                <form method="POST" action="{{ route('pengumuman.store') }}" enctype="multipart/form-data">
                     @include('master.pengumuman._form')
                 </form>
             </div>

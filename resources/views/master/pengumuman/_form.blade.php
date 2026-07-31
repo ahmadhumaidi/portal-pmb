@@ -43,6 +43,31 @@
     </div>
 
     <div class="col-12">
+        <label for="lampiran" class="form-label">Lampiran (opsional)</label>
+
+        <input
+            type="file"
+            id="lampiran"
+            name="lampiran"
+            class="form-control @error('lampiran') is-invalid @enderror"
+            accept=".jpg,.jpeg,.pdf"
+        >
+
+        <div class="form-text">Format JPG atau PDF, maksimal 5 MB.</div>
+
+        @if (isset($pengumuman) && $pengumuman->lampiran_path)
+            <div class="small text-muted mt-1 file-path">
+                Saat ini:
+                <a href="{{ route('pengumuman.lampiran', $pengumuman) }}" target="_blank">{{ $pengumuman->lampiran_path }}</a>
+            </div>
+        @endif
+
+        @error('lampiran')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-12">
         <label class="form-label d-block">Status</label>
 
         <div class="form-check form-switch mt-2">

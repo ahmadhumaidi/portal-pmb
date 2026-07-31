@@ -78,7 +78,14 @@
                     @forelse ($pengumumans as $pengumuman)
                         <tr>
                             <td>{{ $pengumumans->firstItem() + $loop->index }}</td>
-                            <td class="fw-semibold">{{ $pengumuman->judul }}</td>
+                            <td class="fw-semibold">
+                                {{ $pengumuman->judul }}
+                                @if ($pengumuman->lampiran_path)
+                                    <a href="{{ route('pengumuman.lampiran', $pengumuman) }}" target="_blank" title="Lihat lampiran" class="ms-1 text-muted">
+                                        <i class="bi bi-paperclip"></i>
+                                    </a>
+                                @endif
+                            </td>
                             <td>{{ \Illuminate\Support\Str::limit($pengumuman->isi, 80) }}</td>
                             <td>
                                 @if ($pengumuman->status_aktif)
