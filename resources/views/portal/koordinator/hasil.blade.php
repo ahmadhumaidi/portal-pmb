@@ -50,13 +50,13 @@
                             <td class="px-4 py-3 font-bold">{{ $mahasiswa->nama_mahasiswa }}</td>
                             <td class="px-4 py-3 text-slate-500">{{ $mahasiswa->kode_pmb }}</td>
                             <td class="px-4 py-3">{{ $hasil?->status_kelulusan ?: '-' }}</td>
-                            <td class="px-4 py-3">{{ $hasil?->nim ?: '-' }}</td>
-                            <td class="px-4 py-3">{{ $hasil?->nomor_seri_ijazah ?: '-' }}</td>
+                            <td class="px-4 py-3">{{ $hasil?->nim ?: 'Dalam Proses' }}</td>
+                            <td class="px-4 py-3">{{ $hasil?->nomor_seri_ijazah ?: 'Pengajuan PIN' }}</td>
                             <td class="px-4 py-3">
                                 @if($hasil?->link_pddikti)
                                     <a href="{{ $hasil->link_pddikti }}" target="_blank" class="font-bold text-emerald-700 hover:underline">Buka</a>
                                 @else
-                                    -
+                                    Menunggu sinkronisasi NeoFeeder
                                 @endif
                             </td>
                             <td class="px-4 py-3">

@@ -41,11 +41,11 @@
         <dl class="mt-8 grid gap-4 sm:grid-cols-2">
             <div class="rounded-xl bg-slate-50 p-4">
                 <dt class="text-xs font-bold uppercase text-slate-500">NIM</dt>
-                <dd class="mt-1 font-bold text-slate-900">{{ $hasil?->nim ?: '-' }}</dd>
+                <dd class="mt-1 font-bold text-slate-900">{{ $hasil?->nim ?: 'Dalam Proses' }}</dd>
             </div>
             <div class="rounded-xl bg-slate-50 p-4">
                 <dt class="text-xs font-bold uppercase text-slate-500">No. Seri Ijazah</dt>
-                <dd class="mt-1 font-bold text-slate-900">{{ $hasil?->nomor_seri_ijazah ?: '-' }}</dd>
+                <dd class="mt-1 font-bold text-slate-900">{{ $hasil?->nomor_seri_ijazah ?: 'Pengajuan PIN' }}</dd>
             </div>
             <div class="rounded-xl bg-slate-50 p-4 sm:col-span-2">
                 <dt class="text-xs font-bold uppercase text-slate-500">Link PDDIKTI</dt>
@@ -53,7 +53,7 @@
                     @if($hasil?->link_pddikti)
                         <a href="{{ $hasil->link_pddikti }}" target="_blank" class="text-emerald-700 hover:underline break-all">{{ $hasil->link_pddikti }}</a>
                     @else
-                        -
+                        Menunggu sinkronisasi NeoFeeder
                     @endif
                 </dd>
             </div>

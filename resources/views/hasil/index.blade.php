@@ -23,12 +23,12 @@
 </td>
 
 <td>
-    <span class="js-view">{{ $hasil->nim ?: '-' }}</span>
+    <span class="js-view">{{ $hasil->nim ?: 'Dalam Proses' }}</span>
     <input form="hasil-form-{{ $hasil->id }}" type="text" name="nim" value="{{ $hasil->nim }}" class="form-control form-control-sm js-edit d-none">
 </td>
 
 <td>
-    <span class="js-view">{{ $hasil->nomor_seri_ijazah ?: '-' }}</span>
+    <span class="js-view">{{ $hasil->nomor_seri_ijazah ?: 'Pengajuan PIN' }}</span>
     <input form="hasil-form-{{ $hasil->id }}" type="text" name="nomor_seri_ijazah" value="{{ $hasil->nomor_seri_ijazah }}" class="form-control form-control-sm js-edit d-none">
 </td>
 
@@ -38,7 +38,7 @@
 </td>
 
 <td>
-    <span class="js-view">@if ($hasil->link_pddikti)<a href="{{ $hasil->link_pddikti }}" target="_blank" rel="noopener" class="small">Buka</a>@else<span class="text-muted">-</span>@endif</span>
+    <span class="js-view">@if ($hasil->link_pddikti)<a href="{{ $hasil->link_pddikti }}" target="_blank" rel="noopener" class="small">Buka</a>@else<span class="text-muted">Menunggu sinkronisasi NeoFeeder</span>@endif</span>
     <input form="hasil-form-{{ $hasil->id }}" type="url" name="link_pddikti" value="{{ $hasil->link_pddikti }}" class="form-control form-control-sm js-edit d-none" placeholder="https://">
 </td>
 
