@@ -137,6 +137,6 @@ class HasilController extends Controller
         $validated['input_by'] = auth()->id();
         $hasil->update($validated);
 
-        return redirect()->route('hasil.index')->with('success', 'Hasil mahasiswa berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Hasil mahasiswa berhasil diperbarui.');
     }
 }
