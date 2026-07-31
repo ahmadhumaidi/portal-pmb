@@ -18,9 +18,8 @@
                 <a href="#program">Keunggulan</a>
                 <a href="#alur">Alur Daftar</a>
                 <a href="#faq">FAQ</a>
-                <a href="{{ route('portal.mahasiswa.login') }}">Login Mahasiswa</a>
-                <a href="{{ route('portal.koordinator.login') }}">Login Koordinator</a>
-                <a class="landing-login" href="{{ route('login') }}">Masuk Portal</a>
+                <a class="landing-login" href="{{ route('portal.mahasiswa.login') }}">Login Mahasiswa</a>
+                <a class="landing-login" href="{{ route('portal.koordinator.login') }}">Login Koordinator</a>
             </div>
         </div>
     </nav>
