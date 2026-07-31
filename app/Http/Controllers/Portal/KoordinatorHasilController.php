@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
+use App\Models\Pengumuman;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -37,10 +38,13 @@ class KoordinatorHasilController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $pengumumans = Pengumuman::where('status_aktif', true)->latest()->get();
+
         return view('portal.koordinator.hasil', [
             'koordinator' => $koordinator,
             'mahasiswas' => $mahasiswas,
             'search' => $search,
+            'pengumumans' => $pengumumans,
         ]);
     }
 

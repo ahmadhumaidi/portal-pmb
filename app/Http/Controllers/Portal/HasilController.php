@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hasil;
+use App\Models\Pengumuman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -21,8 +22,9 @@ class HasilController extends Controller
     public function index(): View
     {
         $mahasiswa = Auth::guard('mahasiswa')->user()->load('hasil');
+        $pengumumans = Pengumuman::where('status_aktif', true)->latest()->get();
 
-        return view('portal.mahasiswa.hasil', ['mahasiswa' => $mahasiswa]);
+        return view('portal.mahasiswa.hasil', ['mahasiswa' => $mahasiswa, 'pengumumans' => $pengumumans]);
     }
 
     public function viewFile(string $field): BinaryFileResponse|RedirectResponse

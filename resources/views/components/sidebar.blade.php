@@ -113,6 +113,14 @@
             <span>Hasil</span>
         </a>
 
+        <a
+            href="{{ route('pengumuman.index') }}"
+            class="sidebar-link {{ request()->routeIs('pengumuman.*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-megaphone"></i>
+            <span>Pengumuman</span>
+        </a>
+
         <div class="sidebar-section">Sistem</div>
         <a
             href="{{ route('landing.admin.edit') }}"

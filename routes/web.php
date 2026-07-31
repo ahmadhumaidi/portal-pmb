@@ -15,6 +15,7 @@ use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\OcrController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PengaturanController;
+use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\Portal\HasilController as PortalHasilController;
 use App\Http\Controllers\Portal\KoordinatorAuthController;
 use App\Http\Controllers\Portal\KoordinatorHasilController;
@@ -69,6 +70,8 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'create', 'store']);
 
     Route::resource('koordinator', KoordinatorController::class);
+
+    Route::resource('pengumuman', PengumumanController::class)->except('show');
 
     Route::get('mahasiswa-sampah', [MahasiswaController::class, 'trash'])->name('mahasiswa.trash');
     Route::post('mahasiswa/{mahasiswa}/restore', [MahasiswaController::class, 'restore'])->name('mahasiswa.restore')->withTrashed();

@@ -5,6 +5,21 @@
 @section('logout-route', route('portal.koordinator.logout'))
 
 @section('content')
+    @if(($pengumumans ?? collect())->isNotEmpty())
+        <div class="portal-card rounded-2xl bg-white p-6 mb-6">
+            <p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Pengumuman</p>
+            <div class="mt-3 space-y-3">
+                @foreach($pengumumans as $pengumuman)
+                    <div class="rounded-xl bg-amber-50 p-4">
+                        <p class="font-black text-slate-900">{{ $pengumuman->judul }}</p>
+                        <p class="mt-1 text-sm text-slate-700 whitespace-pre-line">{{ $pengumuman->isi }}</p>
+                        <p class="mt-2 text-xs text-slate-400">{{ $pengumuman->created_at->translatedFormat('d M Y') }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="portal-card rounded-2xl bg-white p-6 sm:p-8">
         <p class="text-sm font-bold uppercase tracking-wide text-emerald-700">{{ $koordinator->kode_koordinator }}</p>
         <h1 class="mt-2 text-2xl font-black text-slate-900">Hasil Mahasiswa</h1>
