@@ -4,16 +4,6 @@
 
 @section('logout-route', route('portal.koordinator.logout'))
 
-@php
-    $statusLabels = [
-        'belum_siap' => ['Belum Siap', 'bg-slate-100 text-slate-700'],
-        'siap_dikirim' => ['Siap Dikirim', 'bg-sky-100 text-sky-700'],
-        'sudah_dikirim' => ['Sudah Dikirim', 'bg-teal-100 text-teal-700'],
-        'sudah_diterima' => ['Sudah Diterima', 'bg-emerald-100 text-emerald-700'],
-        'perlu_revisi' => ['Perlu Revisi', 'bg-amber-100 text-amber-700'],
-    ];
-@endphp
-
 @section('content')
     <div class="portal-card rounded-2xl bg-white p-6 sm:p-8">
         <p class="text-sm font-bold uppercase tracking-wide text-emerald-700">{{ $koordinator->kode_koordinator }}</p>
@@ -36,15 +26,12 @@
                         <th class="px-4 py-3">No. Seri Ijazah</th>
                         <th class="px-4 py-3">PDDIKTI</th>
                         <th class="px-4 py-3">Dokumen</th>
-                        <th class="px-4 py-3">Status Kirim</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($mahasiswas as $mahasiswa)
                         @php
                             $hasil = $mahasiswa->hasil;
-                            $status = $hasil?->status_kirim;
-                            [$statusLabel, $statusClass] = $statusLabels[$status] ?? ['Belum Tersedia', 'bg-slate-100 text-slate-700'];
                         @endphp
                         <tr>
                             <td class="px-4 py-3 font-bold">{{ $mahasiswa->nama_mahasiswa }}</td>
@@ -72,13 +59,10 @@
                                     @endforeach
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
-                                <span class="rounded-full px-3 py-1 text-xs font-bold {{ $statusClass }}">{{ $statusLabel }}</span>
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center font-semibold text-slate-500">Belum ada mahasiswa.</td>
+                            <td colspan="7" class="px-4 py-8 text-center font-semibold text-slate-500">Belum ada mahasiswa.</td>
                         </tr>
                     @endforelse
                 </tbody>
