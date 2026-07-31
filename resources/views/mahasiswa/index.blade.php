@@ -43,10 +43,11 @@
         </form>
 
         <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table table-sm align-middle">
                 <thead>
                     <tr>
                         <th>No.</th>
+                        <th>Kode PMB</th>
                         <th>Nama</th>
                         <th>Kampus</th>
                         <th>Jurusan</th>
@@ -64,6 +65,7 @@
                         @endphp
                         <tr>
                             <td>{{ $mahasiswas->firstItem() + $loop->index }}</td>
+                            <td><span class="badge text-bg-light border text-dark">{{ $mahasiswa->kode_pmb }}</span></td>
                             <td>{{ $mahasiswa->nama_mahasiswa }}</td>
                             <td>{{ $mahasiswa->kampus->nama_kampus ?? '-' }}</td>
                             <td>{{ $mahasiswa->jurusan->nama_jurusan ?? '-' }}</td>
@@ -80,7 +82,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center py-5 text-muted">Belum ada data mahasiswa.</td></tr>
+                        <tr><td colspan="9" class="text-center py-5 text-muted">Belum ada data mahasiswa.</td></tr>
                     @endforelse
                 </tbody>
             </table>
