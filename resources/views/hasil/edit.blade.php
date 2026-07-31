@@ -27,7 +27,7 @@
 <div class="col-md-6"><label for="nomor_resi" class="form-label">Nomor Resi</label><input type="text" id="nomor_resi" name="nomor_resi" class="form-control" value="{{ old('nomor_resi', $hasil->nomor_resi) }}"></div>
 <div class="col-md-6"><label for="keterangan" class="form-label">Keterangan</label><textarea id="keterangan" name="keterangan" rows="3" class="form-control">{{ old('keterangan', $hasil->keterangan) }}</textarea></div>
 </div>
-<div class="d-flex justify-content-end gap-2 mt-4"><a href="{{ route('hasil.show', $hasil) }}" class="btn btn-light border">Batal</a><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Simpan Hasil</button></div>
+<div class="d-flex justify-content-end gap-2 mt-4"><a href="{{ route('hasil.index') }}" class="btn btn-light border">Batal</a><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Simpan Hasil</button></div>
 </form>
 </div></div></div></div>
 @endsection
