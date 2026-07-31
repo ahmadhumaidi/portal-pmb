@@ -36,6 +36,7 @@
                         <th class="px-4 py-3">No. Seri Ijazah</th>
                         <th class="px-4 py-3">PDDIKTI</th>
                         <th class="px-4 py-3">Dokumen</th>
+                        <th class="px-4 py-3">Status Kirim</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -48,9 +49,7 @@
                         <tr>
                             <td class="px-4 py-3 font-bold">{{ $mahasiswa->nama_mahasiswa }}</td>
                             <td class="px-4 py-3 text-slate-500">{{ $mahasiswa->kode_pmb }}</td>
-                            <td class="px-4 py-3">
-                                <span class="rounded-full px-3 py-1 text-xs font-bold {{ $statusClass }}">{{ $statusLabel }}</span>
-                            </td>
+                            <td class="px-4 py-3">{{ $hasil?->status_kelulusan ?: '-' }}</td>
                             <td class="px-4 py-3">{{ $hasil?->nim ?: '-' }}</td>
                             <td class="px-4 py-3">{{ $hasil?->nomor_seri_ijazah ?: '-' }}</td>
                             <td class="px-4 py-3">
@@ -73,10 +72,13 @@
                                     @endforeach
                                 </div>
                             </td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-3 py-1 text-xs font-bold {{ $statusClass }}">{{ $statusLabel }}</span>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center font-semibold text-slate-500">Belum ada mahasiswa.</td>
+                            <td colspan="8" class="px-4 py-8 text-center font-semibold text-slate-500">Belum ada mahasiswa.</td>
                         </tr>
                     @endforelse
                 </tbody>

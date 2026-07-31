@@ -15,6 +15,7 @@
     ];
     $status = $hasil?->status_kirim;
     [$statusLabel, $statusClass] = $statusLabels[$status] ?? ['Belum Tersedia', 'bg-slate-100 text-slate-700'];
+    $statusKelulusan = $hasil?->status_kelulusan;
 
     $fileFields = [
         'scan_ijazah' => ['label' => 'Ijazah', 'path' => $hasil?->scan_ijazah_path],
@@ -28,8 +29,13 @@
         <p class="text-sm font-bold uppercase tracking-wide text-emerald-700">Nomor Seleksi: {{ $mahasiswa->kode_pmb }}</p>
         <h1 class="mt-2 text-2xl font-black text-slate-900">{{ $mahasiswa->nama_mahasiswa }}</h1>
 
-        <div class="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black {{ $statusClass }}">
-            Status: {{ $statusLabel }}
+        <div class="mt-6 flex flex-wrap gap-3">
+            <div class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-black text-slate-700">
+                Status: {{ $statusKelulusan ?: 'Belum Tersedia' }}
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black {{ $statusClass }}">
+                Status Kirim: {{ $statusLabel }}
+            </div>
         </div>
 
         <dl class="mt-8 grid gap-4 sm:grid-cols-2">
