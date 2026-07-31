@@ -9,7 +9,7 @@
 <form method="POST" action="{{ route('hasil.update', $hasil) }}" enctype="multipart/form-data">
 @csrf @method('PUT')
 <div class="row g-3">
-<div class="col-md-6"><label for="status_kelulusan" class="form-label">Status Kelulusan</label><input type="text" id="status_kelulusan" name="status_kelulusan" class="form-control" value="{{ old('status_kelulusan', $hasil->status_kelulusan) }}" placeholder="Lulus / Ijazah diterima / lainnya"></div>
+<div class="col-md-6"><label for="status_kelulusan" class="form-label">Status</label><select id="status_kelulusan" name="status_kelulusan" class="form-select"><option value="">-</option>@foreach ($kelulusanStatuses as $option)<option value="{{ $option }}" @selected(old('status_kelulusan', $hasil->status_kelulusan) === $option)>{{ $option }}</option>@endforeach</select></div>
 <div class="col-md-3"><label for="nim" class="form-label">NIM</label><input type="text" id="nim" name="nim" class="form-control" value="{{ old('nim', $hasil->nim) }}"></div>
 <div class="col-md-3"><label for="nomor_seri_ijazah" class="form-label">No. Seri Ijazah</label><input type="text" id="nomor_seri_ijazah" name="nomor_seri_ijazah" class="form-control" value="{{ old('nomor_seri_ijazah', $hasil->nomor_seri_ijazah) }}"></div>
 <div class="col-12"><label for="link_pddikti" class="form-label">Link PDDIKTI</label><input type="url" id="link_pddikti" name="link_pddikti" class="form-control" value="{{ old('link_pddikti', $hasil->link_pddikti) }}"></div>

@@ -13,6 +13,8 @@ class HasilController extends Controller
 {
     private array $statuses = ['belum_siap', 'siap_dikirim', 'sudah_dikirim', 'sudah_diterima', 'perlu_revisi'];
 
+    private array $kelulusanStatuses = ['Input SIAKAD', 'Input NeoFeeder', 'Online Pddikti', 'LULUS Pddikti'];
+
     private array $fileFields = [
         'screenshot_pisn' => ['column' => 'screenshot_pisn_path', 'label' => 'Screenshot PISN'],
         'screenshot_satudikti' => ['column' => 'screenshot_satudikti_path', 'label' => 'Screenshot Satudikti'],
@@ -50,8 +52,9 @@ class HasilController extends Controller
             ->withQueryString();
 
         $statuses = $this->statuses;
+        $kelulusanStatuses = $this->kelulusanStatuses;
 
-        return view('hasil.index', compact('hasils', 'search', 'status', 'statuses'));
+        return view('hasil.index', compact('hasils', 'search', 'status', 'statuses', 'kelulusanStatuses'));
     }
 
     public function show(Hasil $hasil): View
@@ -89,14 +92,15 @@ class HasilController extends Controller
     {
         $hasil->load('mahasiswa');
         $statuses = $this->statuses;
+        $kelulusanStatuses = $this->kelulusanStatuses;
 
-        return view('hasil.edit', compact('hasil', 'statuses'));
+        return view('hasil.edit', compact('hasil', 'statuses', 'kelulusanStatuses'));
     }
 
     public function update(Request $request, Hasil $hasil): RedirectResponse
     {
         $validated = $request->validate([
-            'status_kelulusan' => ['nullable', 'string', 'max:255'],
+            'status_kelulusan' => ['nullable', 'in:' . implode(',', $this->kelulusanStatuses)],
             'nim' => ['nullable', 'string', 'max:255'],
             'nomor_seri_ijazah' => ['nullable', 'string', 'max:255'],
             'link_pddikti' => ['nullable', 'url'],

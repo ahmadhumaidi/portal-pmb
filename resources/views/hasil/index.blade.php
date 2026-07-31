@@ -13,7 +13,12 @@
 <td>{{ $hasils->firstItem() + $loop->index }}</td>
 <td><span class="badge text-bg-light border text-dark">{{ $hasil->kode_hasil }}</span></td>
 <td><div>{{ $hasil->mahasiswa->nama_mahasiswa ?? '-' }}</div><div class="small text-muted">{{ $hasil->mahasiswa->kode_pmb ?? '-' }}</div></td>
-<td><input form="hasil-form-{{ $hasil->id }}" type="text" name="status_kelulusan" value="{{ $hasil->status_kelulusan }}" class="form-control form-control-sm" placeholder="Status kelulusan"></td>
+<td>
+    <select form="hasil-form-{{ $hasil->id }}" name="status_kelulusan" class="form-select form-select-sm">
+        <option value="">-</option>
+        @foreach ($kelulusanStatuses as $option)<option value="{{ $option }}" @selected($hasil->status_kelulusan === $option)>{{ $option }}</option>@endforeach
+    </select>
+</td>
 <td><input form="hasil-form-{{ $hasil->id }}" type="text" name="nim" value="{{ $hasil->nim }}" class="form-control form-control-sm"></td>
 <td><input form="hasil-form-{{ $hasil->id }}" type="text" name="nomor_seri_ijazah" value="{{ $hasil->nomor_seri_ijazah }}" class="form-control form-control-sm"></td>
 <td>
