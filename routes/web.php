@@ -28,12 +28,18 @@ Route::domain(config('portal.student_domain'))->name('portal.')->group(function 
     Route::get('/', [MahasiswaAuthController::class, 'showLogin'])->name('mahasiswa.login');
     Route::post('/login', [MahasiswaAuthController::class, 'login'])->name('mahasiswa.login.attempt');
     Route::post('/logout', [MahasiswaAuthController::class, 'logout'])->name('mahasiswa.logout');
-    Route::middleware('auth:mahasiswa')->get('/hasil', [PortalHasilController::class, 'index'])->name('mahasiswa.hasil');
+    Route::middleware('auth:mahasiswa')->group(function () {
+        Route::get('/hasil', [PortalHasilController::class, 'index'])->name('mahasiswa.hasil');
+        Route::get('/hasil/file/{field}', [PortalHasilController::class, 'viewFile'])->name('mahasiswa.hasil.file');
+    });
 
     Route::get('/koordinator/login', [KoordinatorAuthController::class, 'showLogin'])->name('koordinator.login');
     Route::post('/koordinator/login', [KoordinatorAuthController::class, 'login'])->name('koordinator.login.attempt');
     Route::post('/koordinator/logout', [KoordinatorAuthController::class, 'logout'])->name('koordinator.logout');
-    Route::middleware('auth:koordinator')->get('/koordinator/hasil', [KoordinatorHasilController::class, 'index'])->name('koordinator.hasil');
+    Route::middleware('auth:koordinator')->group(function () {
+        Route::get('/koordinator/hasil', [KoordinatorHasilController::class, 'index'])->name('koordinator.hasil');
+        Route::get('/koordinator/hasil/{mahasiswa}/file/{field}', [KoordinatorHasilController::class, 'viewFile'])->name('koordinator.hasil.file');
+    });
 });
 
 Route::get('/', [LandingPageController::class, 'show'])->name('landing');

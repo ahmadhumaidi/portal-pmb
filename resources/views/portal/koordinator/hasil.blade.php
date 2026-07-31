@@ -1,25 +1,23 @@
 @extends('portal.layout')
 
-@section('title', 'Mahasiswa Saya')
+@section('title', 'Hasil Mahasiswa')
 
 @section('logout-route', route('portal.koordinator.logout'))
 
 @php
     $statusLabels = [
-        'baru' => ['Baru', 'bg-slate-100 text-slate-700'],
-        'proses' => ['Diproses', 'bg-sky-100 text-sky-700'],
-        'berkas_kurang' => ['Berkas Kurang', 'bg-amber-100 text-amber-700'],
-        'siap_registrasi' => ['Siap Registrasi', 'bg-teal-100 text-teal-700'],
-        'terdaftar' => ['Terdaftar', 'bg-emerald-100 text-emerald-700'],
-        'selesai' => ['Selesai', 'bg-emerald-100 text-emerald-800'],
-        'dibatalkan' => ['Dibatalkan', 'bg-red-100 text-red-700'],
+        'belum_siap' => ['Belum Siap', 'bg-slate-100 text-slate-700'],
+        'siap_dikirim' => ['Siap Dikirim', 'bg-sky-100 text-sky-700'],
+        'sudah_dikirim' => ['Sudah Dikirim', 'bg-teal-100 text-teal-700'],
+        'sudah_diterima' => ['Sudah Diterima', 'bg-emerald-100 text-emerald-700'],
+        'perlu_revisi' => ['Perlu Revisi', 'bg-amber-100 text-amber-700'],
     ];
 @endphp
 
 @section('content')
     <div class="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
         <p class="text-sm font-bold uppercase tracking-wide text-emerald-700">{{ $koordinator->kode_koordinator }}</p>
-        <h1 class="mt-2 text-2xl font-black text-slate-900">{{ $koordinator->nama_koordinator }}</h1>
+        <h1 class="mt-2 text-2xl font-black text-slate-900">Hasil Mahasiswa</h1>
         <p class="mt-1 text-sm text-slate-600">{{ $mahasiswas->total() }} mahasiswa yang kamu bawa.</p>
 
         <form method="GET" class="mt-6">
@@ -33,26 +31,52 @@
                     <tr>
                         <th class="px-4 py-3">Nama</th>
                         <th class="px-4 py-3">Kode PMB</th>
-                        <th class="px-4 py-3">Kampus / Jurusan</th>
                         <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">NIM</th>
+                        <th class="px-4 py-3">No. Seri Ijazah</th>
+                        <th class="px-4 py-3">PDDIKTI</th>
+                        <th class="px-4 py-3">Dokumen</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($mahasiswas as $mahasiswa)
                         @php
-                            [$statusLabel, $statusClass] = $statusLabels[$mahasiswa->status_pendaftaran] ?? [$mahasiswa->status_pendaftaran, 'bg-slate-100 text-slate-700'];
+                            $hasil = $mahasiswa->hasil;
+                            $status = $hasil?->status_kirim;
+                            [$statusLabel, $statusClass] = $statusLabels[$status] ?? ['Belum Tersedia', 'bg-slate-100 text-slate-700'];
                         @endphp
                         <tr>
                             <td class="px-4 py-3 font-bold">{{ $mahasiswa->nama_mahasiswa }}</td>
                             <td class="px-4 py-3 text-slate-500">{{ $mahasiswa->kode_pmb }}</td>
-                            <td class="px-4 py-3">{{ $mahasiswa->kampus?->nama_kampus }} / {{ $mahasiswa->jurusan?->nama_jurusan }}</td>
                             <td class="px-4 py-3">
                                 <span class="rounded-full px-3 py-1 text-xs font-bold {{ $statusClass }}">{{ $statusLabel }}</span>
+                            </td>
+                            <td class="px-4 py-3">{{ $hasil?->nim ?: '-' }}</td>
+                            <td class="px-4 py-3">{{ $hasil?->nomor_seri_ijazah ?: '-' }}</td>
+                            <td class="px-4 py-3">
+                                @if($hasil?->link_pddikti)
+                                    <a href="{{ $hasil->link_pddikti }}" target="_blank" class="font-bold text-emerald-700 hover:underline">Buka</a>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-1.5">
+                                    @foreach(['scan_ijazah' => 'Ijazah', 'scan_transkrip' => 'Transkrip', 'screenshot_pisn' => 'PISN'] as $field => $label)
+                                        @php $path = match($field) { 'scan_ijazah' => $hasil?->scan_ijazah_path, 'scan_transkrip' => $hasil?->scan_transkrip_path, 'screenshot_pisn' => $hasil?->screenshot_pisn_path }; @endphp
+                                        @if($path)
+                                            <a href="{{ route('portal.koordinator.hasil.file', [$mahasiswa, $field]) }}" target="_blank"
+                                                class="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-black text-white hover:bg-emerald-700">
+                                                {{ $label }}
+                                            </a>
+                                        @endif
+                                    @endforeach
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-8 text-center font-semibold text-slate-500">Belum ada mahasiswa.</td>
+                            <td colspan="7" class="px-4 py-8 text-center font-semibold text-slate-500">Belum ada mahasiswa.</td>
                         </tr>
                     @endforelse
                 </tbody>
