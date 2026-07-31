@@ -38,7 +38,7 @@ class KoordinatorHasilController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $pengumumans = Pengumuman::where('status_aktif', true)->latest()->get();
+        $pengumumans = Pengumuman::where('status_aktif', true)->orderByDesc('tanggal')->get();
 
         return view('portal.koordinator.hasil', [
             'koordinator' => $koordinator,

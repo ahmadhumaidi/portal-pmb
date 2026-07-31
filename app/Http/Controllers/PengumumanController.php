@@ -40,10 +40,12 @@ class PengumumanController extends Controller
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
             'isi' => ['required', 'string'],
+            'tanggal' => ['nullable', 'date'],
             'status_aktif' => ['nullable', 'boolean'],
             'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,pdf', 'max:5120'],
         ]);
 
+        $validated['tanggal'] = $validated['tanggal'] ?? now()->toDateString();
         $validated['status_aktif'] = $request->boolean('status_aktif', true);
         $validated['input_by'] = auth()->id();
 
@@ -70,10 +72,12 @@ class PengumumanController extends Controller
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
             'isi' => ['required', 'string'],
+            'tanggal' => ['nullable', 'date'],
             'status_aktif' => ['nullable', 'boolean'],
             'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,pdf', 'max:5120'],
         ]);
 
+        $validated['tanggal'] = $validated['tanggal'] ?? now()->toDateString();
         $validated['status_aktif'] = $request->boolean('status_aktif');
 
         if ($request->hasFile('lampiran')) {

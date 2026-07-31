@@ -43,6 +43,22 @@
     </div>
 
     <div class="col-12">
+        <label for="tanggal" class="form-label">Tanggal</label>
+
+        <input
+            type="date"
+            id="tanggal"
+            name="tanggal"
+            class="form-control @error('tanggal') is-invalid @enderror"
+            value="{{ old('tanggal', optional($pengumuman->tanggal ?? null)->format('Y-m-d') ?? now()->toDateString()) }}"
+        >
+
+        @error('tanggal')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-12">
         <label for="lampiran" class="form-label">Lampiran (opsional)</label>
 
         <input

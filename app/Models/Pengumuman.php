@@ -12,6 +12,7 @@ class Pengumuman extends Model
     protected $fillable = [
         'judul',
         'isi',
+        'tanggal',
         'status_aktif',
         'lampiran_path',
         'input_by',
@@ -19,6 +20,7 @@ class Pengumuman extends Model
 
     protected $casts = [
         'status_aktif' => 'boolean',
+        'tanggal' => 'date',
     ];
 
     public function inputBy(): BelongsTo

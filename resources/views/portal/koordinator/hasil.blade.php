@@ -19,7 +19,7 @@
                                 📎 Lihat Lampiran
                             </a>
                         @endif
-                        <p class="mt-2 text-xs text-slate-400">{{ $pengumuman->created_at->translatedFormat('d M Y') }}</p>
+                        <p class="mt-2 text-xs text-slate-400">{{ ($pengumuman->tanggal ?? $pengumuman->created_at)->translatedFormat('d M Y') }}</p>
                     </div>
                 @endforeach
             </div>
