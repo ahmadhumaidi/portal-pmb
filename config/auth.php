@@ -40,6 +40,16 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'mahasiswa' => [
+            'driver' => 'session',
+            'provider' => 'mahasiswas',
+        ],
+
+        'koordinator' => [
+            'driver' => 'session',
+            'provider' => 'koordinators',
+        ],
     ],
 
     /*
@@ -69,6 +79,16 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+
+        'mahasiswas' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Mahasiswa::class,
+        ],
+
+        'koordinators' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Koordinator::class,
+        ],
     ],
 
     /*

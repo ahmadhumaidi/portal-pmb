@@ -3,13 +3,18 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasBusinessCode;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class Koordinator extends Model
+class Koordinator extends Authenticatable
 {
     use HasBusinessCode;
+
+    protected $hidden = [
+        'password',
+    ];
 
     protected $fillable = [
         'koordinator_uuid',
@@ -33,6 +38,8 @@ class Koordinator extends Model
                     'kode_koordinator'
                 );
             }
+
+            $koordinator->password ??= Hash::make('sukses1');
         });
     }
 

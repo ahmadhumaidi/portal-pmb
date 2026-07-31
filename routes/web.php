@@ -15,10 +15,26 @@ use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\OcrController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PengaturanController;
+use App\Http\Controllers\Portal\HasilController as PortalHasilController;
+use App\Http\Controllers\Portal\KoordinatorAuthController;
+use App\Http\Controllers\Portal\KoordinatorHasilController;
+use App\Http\Controllers\Portal\MahasiswaAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SetoranKampusController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
+
+Route::domain(config('portal.student_domain'))->name('portal.')->group(function () {
+    Route::get('/', [MahasiswaAuthController::class, 'showLogin'])->name('mahasiswa.login');
+    Route::post('/login', [MahasiswaAuthController::class, 'login'])->name('mahasiswa.login.attempt');
+    Route::post('/logout', [MahasiswaAuthController::class, 'logout'])->name('mahasiswa.logout');
+    Route::middleware('auth:mahasiswa')->get('/hasil', [PortalHasilController::class, 'index'])->name('mahasiswa.hasil');
+
+    Route::get('/koordinator/login', [KoordinatorAuthController::class, 'showLogin'])->name('koordinator.login');
+    Route::post('/koordinator/login', [KoordinatorAuthController::class, 'login'])->name('koordinator.login.attempt');
+    Route::post('/koordinator/logout', [KoordinatorAuthController::class, 'logout'])->name('koordinator.logout');
+    Route::middleware('auth:koordinator')->get('/koordinator/hasil', [KoordinatorHasilController::class, 'index'])->name('koordinator.hasil');
+});
 
 Route::get('/', [LandingPageController::class, 'show'])->name('landing');
 Route::post('/daftar', [LandingRegistrationController::class, 'store'])

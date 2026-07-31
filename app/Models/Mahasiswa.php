@@ -3,17 +3,22 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasBusinessCode;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class Mahasiswa extends Model
+class Mahasiswa extends Authenticatable
 {
     use HasBusinessCode;
     use SoftDeletes;
+
+    protected $hidden = [
+        'password',
+    ];
 
     protected $fillable = [
         'asal_sekolah',
@@ -64,6 +69,8 @@ class Mahasiswa extends Model
                     true
                 );
             }
+
+            $mahasiswa->password ??= Hash::make('sukses1');
         });
     }
 
