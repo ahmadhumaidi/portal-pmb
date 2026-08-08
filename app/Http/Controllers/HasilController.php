@@ -30,7 +30,7 @@ class HasilController extends Controller
         $hasils = Hasil::query()
             ->select('hasils.*')
             ->join('mahasiswas', 'mahasiswas.id', '=', 'hasils.mahasiswa_id')
-            ->with(['mahasiswa.kampus', 'mahasiswa.jurusan'])
+            ->with(['mahasiswa.kampus', 'mahasiswa.jurusan', 'mahasiswa.pembayarans'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
@@ -61,7 +61,7 @@ class HasilController extends Controller
 
     public function show(Hasil $hasil): View
     {
-        $hasil->load(['mahasiswa.kampus', 'mahasiswa.jurusan', 'inputBy']);
+        $hasil->load(['mahasiswa.kampus', 'mahasiswa.jurusan', 'mahasiswa.pembayarans', 'inputBy']);
 
         return view('hasil.show', [
             'hasil' => $hasil,

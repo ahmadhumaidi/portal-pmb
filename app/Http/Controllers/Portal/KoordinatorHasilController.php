@@ -27,7 +27,7 @@ class KoordinatorHasilController extends Controller
         $search = trim((string) $request->query('search'));
 
         $mahasiswas = $koordinator->mahasiswas()
-            ->with(['kampus', 'jurusan', 'hasil'])
+            ->with(['kampus', 'jurusan', 'hasil', 'pembayarans'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nama_mahasiswa', 'like', "%{$search}%")

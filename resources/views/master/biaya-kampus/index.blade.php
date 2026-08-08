@@ -58,7 +58,9 @@
                         <th style="width: 130px;">Kode</th>
                         <th>Kampus</th>
                         <th>Berlaku Untuk</th>
-                        <th>Biaya</th>
+                        <th>Biaya Pendidikan</th>
+                        <th>Biaya Wisuda</th>
+                        <th>Biaya Almamater</th>
                         <th>Status</th>
                         <th class="text-end" style="width: 150px;">Aksi</th>
                     </tr>
@@ -78,6 +80,8 @@
                                 @endif
                             </td>
                             <td>Rp {{ number_format($item->biaya, 0, ',', '.') }}</td>
+                            <td>Rp {{ number_format($item->biaya_wisuda, 0, ',', '.') }}</td>
+                            <td>Rp {{ number_format($item->biaya_almamater, 0, ',', '.') }}</td>
                             <td>
                                 @if ($item->status_aktif)
                                     <span class="badge text-bg-success">Aktif</span>
@@ -96,7 +100,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-cash-coin fs-1 d-block mb-2"></i>
                                 Belum ada data biaya kampus.
                             </td>

@@ -24,6 +24,7 @@ class MahasiswaController extends Controller
     {
         $search = trim((string) $request->query('search'));
         $status = $request->query('status');
+        $kampusId = $request->query('kampus_id');
 
         $mahasiswas = Mahasiswa::query()
             ->with([
@@ -47,13 +48,15 @@ class MahasiswaController extends Controller
                 });
             })
             ->when($status, fn ($query) => $query->where('status_pendaftaran', $status))
+            ->when($kampusId, fn ($query) => $query->where('kampus_id', $kampusId))
             ->latest()
             ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $statuses = $this->statuses;
+        $kampuses = Kampus::query()->orderBy('nama_kampus')->get();
 
-        return view('mahasiswa.index', compact('mahasiswas', 'search', 'status', 'statuses'));
+        return view('mahasiswa.index', compact('mahasiswas', 'search', 'status', 'statuses', 'kampusId', 'kampuses'));
     }
 
     public function create(Request $request): View
@@ -149,7 +152,10 @@ class MahasiswaController extends Controller
 
         $mahasiswa->update($validated);
 
-        return redirect()->route('mahasiswa.show', $mahasiswa)->with('success', 'Data mahasiswa berhasil diperbarui.');
+        $backQuery = $request->input('back');
+        $showUrl = route('mahasiswa.show', $mahasiswa) . ($backQuery ? '?back=' . urlencode($backQuery) : '');
+
+        return redirect($showUrl)->with('success', 'Data mahasiswa berhasil diperbarui.');
     }
 
     public function destroy(Mahasiswa $mahasiswa): RedirectResponse

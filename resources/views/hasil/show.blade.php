@@ -6,6 +6,15 @@
 
 @section('content')
 @php
+$biayaBadgeClass = [
+    'Lunas' => 'text-bg-success',
+    'Menunggu Verifikasi' => 'text-bg-warning',
+    'Belum Bayar' => 'text-bg-secondary',
+    'Belum Lunas' => 'text-bg-secondary',
+];
+$mahasiswa = $hasil->mahasiswa;
+$targetWisuda = $mahasiswa?->resolvedBiayaWisuda();
+$targetAlmamater = $mahasiswa?->resolvedBiayaAlmamater();
 $data = [
 'Kode Hasil' => $hasil->kode_hasil,
 'Mahasiswa' => $hasil->mahasiswa->nama_mahasiswa ?? null,
@@ -32,6 +41,18 @@ $data = [
 @php $path = $hasil->{$meta['column']}; @endphp
 <tr><td>{{ $meta['label'] }}</td><td class="text-end">@if ($path)<a href="{{ route('hasil.view-file', [$hasil, $field]) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Lihat</a>@else<span class="text-muted small">Belum upload</span>@endif</td></tr>
 @endforeach
+</tbody></table></div></div></div>
+<div class="card dashboard-card border-0 mb-4"><div class="card-header"><div><h5>Biaya Wisuda & Almamater</h5><small>Target setoran ke kampus dan status pembayaran dari mahasiswa</small></div></div><div class="card-body"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Item</th><th>Target Setor ke Kampus</th><th>Status Pembayaran Mahasiswa</th></tr></thead><tbody>
+<tr>
+    <td>Wisuda</td>
+    <td>{{ $targetWisuda ? 'Rp ' . number_format($targetWisuda, 0, ',', '.') : '-' }}</td>
+    <td><span class="badge {{ $biayaBadgeClass[$mahasiswa?->statusPembayaranJenis('Wisuda')] ?? 'text-bg-secondary' }}">{{ $mahasiswa?->statusPembayaranJenis('Wisuda') ?? '-' }}</span></td>
+</tr>
+<tr>
+    <td>Almamater</td>
+    <td>{{ $targetAlmamater ? 'Rp ' . number_format($targetAlmamater, 0, ',', '.') : '-' }}</td>
+    <td><span class="badge {{ $biayaBadgeClass[$mahasiswa?->statusPembayaranJenis('Almamater')] ?? 'text-bg-secondary' }}">{{ $mahasiswa?->statusPembayaranJenis('Almamater') ?? '-' }}</span></td>
+</tr>
 </tbody></table></div></div></div>
 <div class="card dashboard-card border-0"><div class="card-header"><div><h5>Data Lengkap Hasil</h5><small>Data hasil dan dokumen akhir yang dipakai sistem</small></div></div><div class="card-body"><div class="detail-list">
 @foreach ($data as $label => $value)<div class="detail-label">{{ $label }}</div><div class="detail-value {{ str_contains($label, 'Link') ? 'file-path' : '' }}">{{ $value ?: '-' }}</div>@endforeach

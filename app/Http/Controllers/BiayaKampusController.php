@@ -62,6 +62,8 @@ class BiayaKampusController extends Controller
                 Rule::exists('jurusans', 'id')->where(fn ($query) => $query->where('kampus_id', $request->kampus_id)),
             ],
             'biaya' => ['required', 'numeric', 'min:0'],
+            'biaya_wisuda' => ['nullable', 'numeric', 'min:0'],
+            'biaya_almamater' => ['nullable', 'numeric', 'min:0'],
             'keterangan' => ['nullable', 'string'],
             'status_aktif' => ['nullable', 'boolean'],
         ]);
@@ -89,6 +91,8 @@ class BiayaKampusController extends Controller
                     'kampus_id' => $request->kampus_id,
                     'jurusan_id' => $jurusanId,
                     'biaya' => $request->biaya,
+                    'biaya_wisuda' => $request->input('biaya_wisuda', 0),
+                    'biaya_almamater' => $request->input('biaya_almamater', 0),
                     'keterangan' => $request->keterangan,
                     'status_aktif' => $statusAktif,
                 ]);
@@ -131,6 +135,8 @@ class BiayaKampusController extends Controller
                 Rule::exists('jurusans', 'id')->where(fn ($query) => $query->where('kampus_id', $request->kampus_id)),
             ],
             'biaya' => ['required', 'numeric', 'min:0'],
+            'biaya_wisuda' => ['nullable', 'numeric', 'min:0'],
+            'biaya_almamater' => ['nullable', 'numeric', 'min:0'],
             'keterangan' => ['nullable', 'string'],
             'status_aktif' => ['nullable', 'boolean'],
         ]);
@@ -155,6 +161,8 @@ class BiayaKampusController extends Controller
             'kampus_id' => $request->kampus_id,
             'jurusan_id' => $jurusanId,
             'biaya' => $request->biaya,
+            'biaya_wisuda' => $request->input('biaya_wisuda', 0),
+            'biaya_almamater' => $request->input('biaya_almamater', 0),
             'keterangan' => $request->keterangan,
             'status_aktif' => $request->boolean('status_aktif'),
         ]);

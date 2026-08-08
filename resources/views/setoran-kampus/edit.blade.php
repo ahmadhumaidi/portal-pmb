@@ -14,6 +14,7 @@
     <div class="card-body">
         <div class="row g-3">
             <div class="col-12"><label class="form-label">Mahasiswa</label><input type="text" class="form-control" value="{{ $setoranKampus->mahasiswa->kode_pmb }} - {{ $setoranKampus->mahasiswa->nama_mahasiswa }} ({{ $setoranKampus->mahasiswa->kampus->nama_kampus ?? '-' }})" disabled></div>
+            <div class="col-md-6"><label class="form-label">Jenis Setoran</label><input type="text" class="form-control" value="{{ $setoranKampus->jenis_setoran }}" disabled></div>
             <div class="col-md-6"><label for="nominal" class="form-label">Nominal Disetor ke Kampus</label><input type="number" id="nominal" name="nominal" min="0" step="1" class="form-control @error('nominal') is-invalid @enderror" value="{{ old('nominal', $setoranKampus->nominal) }}" required>@error('nominal')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
             <div class="col-md-6"><label for="tanggal_setor" class="form-label">Tanggal Setor</label><input type="date" id="tanggal_setor" name="tanggal_setor" class="form-control @error('tanggal_setor') is-invalid @enderror" value="{{ old('tanggal_setor', optional($setoranKampus->tanggal_setor)->format('Y-m-d')) }}" required>@error('tanggal_setor')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
             <div class="col-md-6">

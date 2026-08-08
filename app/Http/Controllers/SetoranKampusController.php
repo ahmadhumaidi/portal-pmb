@@ -6,12 +6,16 @@ use App\Models\Mahasiswa;
 use App\Models\SetoranKampus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SetoranKampusController extends Controller
 {
+    private array $jenisSetorans = ['Biaya Pendidikan', 'Wisuda', 'Almamater'];
+
     public function index(Request $request): View
     {
         $search = trim((string) $request->query('search'));
@@ -38,34 +42,88 @@ class SetoranKampusController extends Controller
 
     public function create(Request $request): View
     {
-        $mahasiswas = Mahasiswa::query()->with('kampus')->orderBy('nama_mahasiswa')->get();
+        $mahasiswas = Mahasiswa::query()
+            ->with(['kampus', 'setoranKampus:id,mahasiswa_id,jenis_setoran,nominal', 'pembayarans:id,mahasiswa_id,jenis_pembayaran'])
+            ->orderBy('nama_mahasiswa')
+            ->get();
         $selectedMahasiswa = $request->query('mahasiswa_id');
+        $jenisSetorans = $this->jenisSetorans;
 
-        return view('setoran-kampus.create', compact('mahasiswas', 'selectedMahasiswa'));
+        $kewajibanByMahasiswa = $mahasiswas->mapWithKeys(function (Mahasiswa $mahasiswa) {
+            $perJenis = collect($this->jenisSetorans)->mapWithKeys(function (string $jenis) use ($mahasiswa) {
+                $target = $mahasiswa->targetBiayaKampusJenis($jenis);
+                $kewajiban = $mahasiswa->kewajibanKampusJenis($jenis);
+                $opsionalBelumOptIn = $jenis === 'Almamater' && !$mahasiswa->sudahOptInAlmamater();
+
+                return [
+                    $jenis => [
+                        'target' => $target,
+                        'sudah_disetor' => $mahasiswa->totalSetorKampusJenis($jenis),
+                        'tunggakan' => $kewajiban !== null ? max(0, $kewajiban) : null,
+                        'opsional_belum_opt_in' => $opsionalBelumOptIn,
+                    ],
+                ];
+            });
+
+            return [$mahasiswa->id => $perJenis];
+        });
+
+        return view('setoran-kampus.create', compact('mahasiswas', 'selectedMahasiswa', 'jenisSetorans', 'kewajibanByMahasiswa'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'mahasiswa_id' => ['required', 'exists:mahasiswas,id'],
-            'nominal' => ['required', 'numeric', 'min:0'],
+            'nominal' => ['required', 'array'],
+            'nominal.*' => ['nullable', 'numeric', 'min:0'],
             'tanggal_setor' => ['required', 'date'],
             'bukti_setor' => ['nullable', 'file', 'max:5120'],
             'catatan' => ['nullable', 'string'],
         ]);
 
-        $mahasiswa = Mahasiswa::findOrFail($validated['mahasiswa_id']);
+        $items = collect($validated['nominal'])
+            ->only($this->jenisSetorans)
+            ->filter(fn ($nominal) => $nominal !== null && $nominal !== '' && (float) $nominal > 0);
 
-        if ($request->hasFile('bukti_setor')) {
-            $validated['bukti_setor_path'] = $request->file('bukti_setor')->store('setoran-kampus/' . $mahasiswa->kode_pmb, 'public');
+        if ($items->isEmpty()) {
+            throw ValidationException::withMessages([
+                'nominal' => 'Isi nominal untuk setidaknya satu jenis setoran.',
+            ]);
         }
 
-        unset($validated['bukti_setor']);
-        $validated['input_by'] = auth()->id();
+        $mahasiswa = Mahasiswa::findOrFail($validated['mahasiswa_id']);
 
-        $setoranKampus = SetoranKampus::create($validated);
+        $buktiSetorPath = null;
 
-        return redirect()->route('setoran-kampus.show', $setoranKampus)->with('success', 'Setoran ke kampus berhasil disimpan.');
+        if ($request->hasFile('bukti_setor')) {
+            $buktiSetorPath = $request->file('bukti_setor')->store('setoran-kampus/' . $mahasiswa->kode_pmb, 'public');
+        }
+
+        $inputBy = auth()->id();
+        $first = null;
+
+        DB::transaction(function () use ($items, $mahasiswa, $validated, $buktiSetorPath, $inputBy, &$first) {
+            foreach ($items as $jenis => $nominal) {
+                $setoranKampus = SetoranKampus::create([
+                    'mahasiswa_id' => $mahasiswa->id,
+                    'jenis_setoran' => $jenis,
+                    'nominal' => $nominal,
+                    'tanggal_setor' => $validated['tanggal_setor'],
+                    'bukti_setor_path' => $buktiSetorPath,
+                    'catatan' => $validated['catatan'] ?? null,
+                    'input_by' => $inputBy,
+                ]);
+
+                $first ??= $setoranKampus;
+            }
+        });
+
+        $message = $items->count() > 1
+            ? $items->count() . ' setoran ke kampus (' . $items->keys()->implode(', ') . ') berhasil disimpan.'
+            : 'Setoran ke kampus berhasil disimpan.';
+
+        return redirect()->route('setoran-kampus.show', $first)->with('success', $message);
     }
 
     public function show(SetoranKampus $setoranKampus): View

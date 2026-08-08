@@ -11,6 +11,7 @@ $data = [
 'Mahasiswa' => $setoranKampus->mahasiswa->nama_mahasiswa ?? null,
 'Kode PMB' => $setoranKampus->mahasiswa->kode_pmb ?? null,
 'Kampus' => $setoranKampus->mahasiswa->kampus->nama_kampus ?? null,
+'Jenis Setoran' => $setoranKampus->jenis_setoran,
 'Nominal Disetor' => 'Rp ' . number_format($setoranKampus->nominal, 0, ',', '.'),
 'Tanggal Setor' => optional($setoranKampus->tanggal_setor)->format('d M Y'),
 'Catatan' => $setoranKampus->catatan,

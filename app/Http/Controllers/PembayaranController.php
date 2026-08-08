@@ -6,13 +6,17 @@ use App\Models\Mahasiswa;
 use App\Models\Pembayaran;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PembayaranController extends Controller
 {
     private array $statuses = ['menunggu', 'terverifikasi', 'ditolak', 'dibatalkan'];
+
+    private array $jenisPembayarans = ['Angsuran', 'Wisuda', 'Almamater'];
 
     private array $fileFields = [
         'bukti_bayar' => ['column' => 'bukti_bayar_path', 'drive_url_column' => 'bukti_bayar_drive_url', 'label' => 'Bukti Bayar'],
@@ -53,11 +57,12 @@ class PembayaranController extends Controller
     public function create(Request $request): View
     {
         $mahasiswas = Mahasiswa::query()
-            ->with(['kampus', 'jurusan', 'pembayarans:id,mahasiswa_id,jenis_pembayaran,angsuran_ke'])
+            ->with(['kampus', 'jurusan', 'pembayarans:id,mahasiswa_id,jenis_pembayaran,angsuran_ke,nominal,status_bayar'])
             ->orderBy('nama_mahasiswa')
             ->get();
         $selectedMahasiswa = $request->query('mahasiswa_id');
         $statuses = $this->statuses;
+        $jenisPembayarans = $this->jenisPembayarans;
 
         $usedAngsuran = $mahasiswas->mapWithKeys(fn (Mahasiswa $mahasiswa) => [
             $mahasiswa->id => $mahasiswa->pembayarans
@@ -67,38 +72,98 @@ class PembayaranController extends Controller
                 ->values(),
         ]);
 
-        return view('pembayaran.create', compact('mahasiswas', 'selectedMahasiswa', 'statuses', 'usedAngsuran'));
+        $infoByMahasiswa = $mahasiswas->mapWithKeys(fn (Mahasiswa $mahasiswa) => [
+            $mahasiswa->id => [
+                'Angsuran' => [
+                    'harga_kesepakatan' => (float) $mahasiswa->harga_kesepakatan,
+                    'sudah_dibayar' => $mahasiswa->totalDibayarMahasiswa(),
+                    'tunggakan' => max(0, $mahasiswa->totalTagihan()),
+                    'sudah_lunas' => $mahasiswa->sudahLunas(),
+                ],
+                'Wisuda' => [
+                    'status' => $mahasiswa->statusPembayaranJenis('Wisuda'),
+                    'referensi' => $mahasiswa->resolvedBiayaWisuda(),
+                ],
+                'Almamater' => [
+                    'status' => $mahasiswa->statusPembayaranJenis('Almamater'),
+                    'referensi' => $mahasiswa->resolvedBiayaAlmamater(),
+                ],
+            ],
+        ]);
+
+        return view('pembayaran.create', compact('mahasiswas', 'selectedMahasiswa', 'statuses', 'jenisPembayarans', 'usedAngsuran', 'infoByMahasiswa'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'mahasiswa_id' => ['required', 'exists:mahasiswas,id'],
-            'angsuran_ke' => ['required', 'integer', 'min:1', 'max:99'],
+            'nominal' => ['required', 'array'],
+            'nominal.*' => ['nullable', 'numeric', 'min:0'],
+            'angsuran_ke' => ['nullable', 'integer', 'min:1', 'max:99'],
             'tanggal_bayar' => ['required', 'date'],
-            'nominal' => ['required', 'numeric', 'min:0'],
             'status_bayar' => ['required', 'in:' . implode(',', $this->statuses)],
             'bukti_bayar' => ['nullable', 'file', 'max:5120'],
             'catatan' => ['nullable', 'string'],
         ]);
 
+        $items = collect($validated['nominal'])
+            ->only($this->jenisPembayarans)
+            ->filter(fn ($nominal) => $nominal !== null && $nominal !== '' && (float) $nominal > 0);
+
+        if ($items->isEmpty()) {
+            throw ValidationException::withMessages([
+                'nominal' => 'Isi nominal untuk setidaknya satu jenis pembayaran.',
+            ]);
+        }
+
+        if ($items->has('Angsuran') && blank($validated['angsuran_ke'] ?? null)) {
+            throw ValidationException::withMessages([
+                'angsuran_ke' => 'Pilih angsuran ke berapa untuk Biaya Pendidikan.',
+            ]);
+        }
+
         $mahasiswa = Mahasiswa::findOrFail($validated['mahasiswa_id']);
 
+        $buktiBayarPath = null;
+
         if ($request->hasFile('bukti_bayar')) {
-            $validated['bukti_bayar_path'] = $request->file('bukti_bayar')->store('pembayaran/' . $mahasiswa->kode_pmb, 'public');
+            $buktiBayarPath = $request->file('bukti_bayar')->store('pembayaran/' . $mahasiswa->kode_pmb, 'public');
         }
 
-        unset($validated['bukti_bayar']);
-        $validated['jenis_pembayaran'] = 'Angsuran';
-        $validated['input_by'] = auth()->id();
-        if ($validated['status_bayar'] === 'terverifikasi') {
-            $validated['verified_by'] = auth()->id();
-            $validated['verified_at'] = now();
-        }
+        $inputBy = auth()->id();
+        $isVerified = $validated['status_bayar'] === 'terverifikasi';
+        $first = null;
 
-        $pembayaran = Pembayaran::create($validated);
+        DB::transaction(function () use ($items, $mahasiswa, $validated, $buktiBayarPath, $inputBy, $isVerified, &$first) {
+            foreach ($items as $jenis => $nominal) {
+                $payload = [
+                    'mahasiswa_id' => $mahasiswa->id,
+                    'jenis_pembayaran' => $jenis,
+                    'angsuran_ke' => $jenis === 'Angsuran' ? $validated['angsuran_ke'] : null,
+                    'tanggal_bayar' => $validated['tanggal_bayar'],
+                    'nominal' => $nominal,
+                    'status_bayar' => $validated['status_bayar'],
+                    'bukti_bayar_path' => $buktiBayarPath,
+                    'catatan' => $validated['catatan'] ?? null,
+                    'input_by' => $inputBy,
+                ];
 
-        return redirect()->route('pembayaran.show', $pembayaran)->with('success', 'Pembayaran manual berhasil disimpan.');
+                if ($isVerified) {
+                    $payload['verified_by'] = $inputBy;
+                    $payload['verified_at'] = now();
+                }
+
+                $pembayaran = Pembayaran::create($payload);
+                $first ??= $pembayaran;
+            }
+        });
+
+        $message = $items->count() > 1
+            ? $items->count() . ' pembayaran (' . $items->keys()->implode(', ') . ') berhasil disimpan.'
+            : 'Pembayaran manual berhasil disimpan.';
+
+        return redirect()->route('pembayaran.show', $first)->with('success', $message);
     }
 
     public function show(Pembayaran $pembayaran): View

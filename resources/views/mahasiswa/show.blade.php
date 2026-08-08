@@ -6,6 +6,10 @@
 
 @section('content')
 @php
+    $backQuery = request('back');
+    $indexUrl = route('mahasiswa.index') . ($backQuery ? '?' . $backQuery : '');
+    $editUrl = route('mahasiswa.edit', $mahasiswa) . ($backQuery ? '?back=' . urlencode($backQuery) : '');
+
     $data = [
         'Kode PMB' => $mahasiswa->kode_pmb,
         'Nama Mahasiswa' => $mahasiswa->nama_mahasiswa,
@@ -35,9 +39,9 @@
 @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <a href="{{ route('mahasiswa.index') }}" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
+    <a href="{{ $indexUrl }}" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
     <div class="d-flex gap-2">
-        <a href="{{ route('mahasiswa.edit', $mahasiswa) }}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Edit Data</a>
+        <a href="{{ $editUrl }}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Edit Data</a>
         <form action="{{ route('mahasiswa.destroy', $mahasiswa) }}" method="POST" onsubmit="return confirm('Hapus data mahasiswa ini? Berkas dan pembayaran yang terkait akan ikut terhapus permanen.')">
             @csrf
             @method('DELETE')

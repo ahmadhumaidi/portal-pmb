@@ -5,9 +5,17 @@
 @section('page-description', 'Pantau hasil kelulusan dan pengiriman dokumen akhir')
 
 @section('content')
+@php
+    $biayaBadgeClass = [
+        'Lunas' => 'text-bg-success',
+        'Menunggu Verifikasi' => 'text-bg-warning',
+        'Belum Bayar' => 'text-bg-secondary',
+        'Belum Lunas' => 'text-bg-secondary',
+    ];
+@endphp
 <div class="card dashboard-card border-0"><div class="card-header flex-wrap gap-3"><div><h5>Daftar Hasil</h5><small>Status NIM, ijazah, dokumen, dan pengiriman hasil mahasiswa &mdash; klik Edit untuk ubah baris</small></div></div><div class="card-body">
 <form method="GET" action="{{ route('hasil.index') }}" class="row g-2 mb-4"><div class="col-md-7"><input type="search" name="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Cari kode, nama, NIM, seri ijazah, status, atau link..."></div><div class="col-md-3"><select name="status" class="form-select"><option value="">Semua status kirim</option>@foreach ($statuses as $option)<option value="{{ $option }}" @selected(($status ?? '') === $option)>{{ ucfirst(str_replace('_', ' ', $option)) }}</option>@endforeach</select></div><div class="col-md-2 d-flex gap-2"><button class="btn btn-outline-primary" type="submit">Cari</button><a href="{{ route('hasil.index') }}" class="btn btn-outline-secondary">Reset</a></div></form>
-<div class="table-responsive"><table class="table align-middle"><thead><tr><th>No.</th><th>Kode</th><th>Mahasiswa</th><th style="min-width:140px">Status</th><th style="min-width:120px">NIM</th><th style="min-width:120px">No. Seri</th><th style="min-width:150px">PISN</th><th style="min-width:150px">Link PDDIKTI</th><th style="min-width:150px">Ijazah</th><th style="min-width:150px">Transkrip</th><th style="min-width:150px">Status Kirim</th><th></th></tr></thead><tbody>
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>No.</th><th>Kode</th><th>Mahasiswa</th><th style="min-width:140px">Status</th><th style="min-width:120px">NIM</th><th style="min-width:120px">No. Seri</th><th style="min-width:150px">PISN</th><th style="min-width:150px">Link PDDIKTI</th><th style="min-width:150px">Ijazah</th><th style="min-width:150px">Transkrip</th><th style="min-width:160px">Wisuda</th><th style="min-width:160px">Almamater</th><th style="min-width:150px">Status Kirim</th><th></th></tr></thead><tbody>
 @forelse ($hasils as $hasil)
 <tr class="js-hasil-row" data-row-id="{{ $hasil->id }}">
 <td>{{ $hasils->firstItem() + $loop->index }}</td>
@@ -52,6 +60,26 @@
     <input form="hasil-form-{{ $hasil->id }}" type="file" name="scan_transkrip" class="form-control form-control-sm js-edit d-none">
 </td>
 
+@php
+    $mahasiswa = $hasil->mahasiswa;
+    $targetWisuda = $mahasiswa?->resolvedBiayaWisuda();
+    $targetAlmamater = $mahasiswa?->resolvedBiayaAlmamater();
+@endphp
+
+<td>
+    <span class="badge {{ $biayaBadgeClass[$mahasiswa?->statusPembayaranJenis('Wisuda')] ?? 'text-bg-secondary' }}">{{ $mahasiswa?->statusPembayaranJenis('Wisuda') ?? '-' }}</span>
+    @if ($targetWisuda)
+        <div class="small text-muted mt-1">Target: Rp {{ number_format($targetWisuda, 0, ',', '.') }}</div>
+    @endif
+</td>
+
+<td>
+    <span class="badge {{ $biayaBadgeClass[$mahasiswa?->statusPembayaranJenis('Almamater')] ?? 'text-bg-secondary' }}">{{ $mahasiswa?->statusPembayaranJenis('Almamater') ?? '-' }}</span>
+    @if ($targetAlmamater)
+        <div class="small text-muted mt-1">Target: Rp {{ number_format($targetAlmamater, 0, ',', '.') }}</div>
+    @endif
+</td>
+
 <td>
     <span class="js-view"><span class="badge text-bg-info">{{ ucfirst(str_replace('_', ' ', $hasil->status_kirim)) }}</span></span>
     <select form="hasil-form-{{ $hasil->id }}" name="status_kirim" class="form-select form-select-sm js-edit d-none" required>
@@ -65,7 +93,7 @@
     <button form="hasil-form-{{ $hasil->id }}" type="submit" class="btn btn-sm btn-primary js-hasil-save d-none">Simpan</button>
 </td>
 </tr>
-@empty<tr><td colspan="12" class="text-center py-5 text-muted">Belum ada data hasil.</td></tr>@endforelse
+@empty<tr><td colspan="14" class="text-center py-5 text-muted">Belum ada data hasil.</td></tr>@endforelse
 </tbody></table></div><div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">@include('partials.per-page-select'){{ $hasils->links() }}</div></div></div>
 
 @foreach ($hasils as $hasil)

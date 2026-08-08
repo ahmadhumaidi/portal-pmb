@@ -17,6 +17,7 @@ class SetoranKampus extends Model
         'setoran_kampus_uuid',
         'kode_setoran_kampus',
         'mahasiswa_id',
+        'jenis_setoran',
         'input_by',
         'nominal',
         'tanggal_setor',

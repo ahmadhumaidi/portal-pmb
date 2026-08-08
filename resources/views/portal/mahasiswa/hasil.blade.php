@@ -8,6 +8,19 @@
     $hasil = $mahasiswa->hasil;
     $statusKelulusan = $hasil?->status_kelulusan;
 
+    $itemPembayaran = [
+        'Biaya Pendidikan' => $mahasiswa->statusBiayaPendidikan(),
+        'Wisuda' => $mahasiswa->statusPembayaranJenis('Wisuda'),
+        'Almamater' => $mahasiswa->statusPembayaranJenis('Almamater'),
+    ];
+
+    $statusBadgeClass = [
+        'Lunas' => 'bg-emerald-100 text-emerald-700',
+        'Menunggu Verifikasi' => 'bg-amber-100 text-amber-700',
+        'Belum Bayar' => 'bg-slate-100 text-slate-600',
+        'Belum Lunas' => 'bg-slate-100 text-slate-600',
+    ];
+
     $fileFields = [
         'scan_ijazah' => ['label' => 'Ijazah', 'path' => $hasil?->scan_ijazah_path],
         'scan_transkrip' => ['label' => 'Transkrip', 'path' => $hasil?->scan_transkrip_path],
@@ -67,6 +80,18 @@
                 </dd>
             </div>
         </dl>
+
+        <div class="mt-8">
+            <p class="text-xs font-bold uppercase text-slate-500">Status Pembayaran</p>
+            <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                @foreach($itemPembayaran as $jenis => $statusItem)
+                    <div class="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+                        <span class="font-bold text-slate-900">{{ $jenis }}</span>
+                        <span class="rounded-full px-3 py-1 text-xs font-black {{ $statusBadgeClass[$statusItem] }}">{{ $statusItem }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
 
         <div class="mt-8">
             <p class="text-xs font-bold uppercase text-slate-500">Dokumen Hasil S1</p>

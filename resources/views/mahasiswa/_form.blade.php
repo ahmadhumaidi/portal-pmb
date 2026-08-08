@@ -1,4 +1,5 @@
 @csrf
+<input type="hidden" name="back" value="{{ old('back', request('back')) }}">
 
 <div class="row g-3">
     <div class="col-md-6"><label for="nama_mahasiswa" class="form-label">Nama Mahasiswa</label><input type="text" id="nama_mahasiswa" name="nama_mahasiswa" class="form-control @error('nama_mahasiswa') is-invalid @enderror" value="{{ old('nama_mahasiswa', $mahasiswa->nama_mahasiswa ?? '') }}" required autofocus>@error('nama_mahasiswa')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
@@ -44,7 +45,11 @@
     <div class="col-12"><label for="keterangan" class="form-label">Keterangan</label><textarea id="keterangan" name="keterangan" rows="3" class="form-control @error('keterangan') is-invalid @enderror">{{ old('keterangan', $mahasiswa->keterangan ?? '') }}</textarea>@error('keterangan')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
 </div>
 
-<div class="d-flex justify-content-end gap-2 mt-4"><a href="{{ route('mahasiswa.index') }}" class="btn btn-light border">Batal</a><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Simpan</button></div>
+@php
+    $cancelBackQuery = old('back', request('back'));
+    $cancelUrl = route('mahasiswa.index') . ($cancelBackQuery ? '?' . $cancelBackQuery : '');
+@endphp
+<div class="d-flex justify-content-end gap-2 mt-4"><a href="{{ $cancelUrl }}" class="btn btn-light border">Batal</a><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Simpan</button></div>
 
 <div class="modal fade" id="tambahKoordinatorModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">

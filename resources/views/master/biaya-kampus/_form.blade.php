@@ -44,12 +44,24 @@
     </div>
 
     <div class="col-md-4">
-        <label for="biaya" class="form-label">Biaya Disetor ke Kampus</label>
+        <label for="biaya" class="form-label">Biaya Pendidikan Disetor ke Kampus</label>
         <input type="number" id="biaya" name="biaya" min="0" step="1" class="form-control @error('biaya') is-invalid @enderror" value="{{ old('biaya', $biayaKampus->biaya ?? 0) }}" required>
         @error('biaya')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 
-    <div class="col-md-8 d-flex align-items-end">
+    <div class="col-md-4">
+        <label for="biaya_wisuda" class="form-label">Biaya Wisuda Disetor ke Kampus</label>
+        <input type="number" id="biaya_wisuda" name="biaya_wisuda" min="0" step="1" class="form-control @error('biaya_wisuda') is-invalid @enderror" value="{{ old('biaya_wisuda', $biayaKampus->biaya_wisuda ?? 0) }}">
+        @error('biaya_wisuda')<div class="invalid-feedback">{{ $message }}</div>@enderror
+    </div>
+
+    <div class="col-md-4">
+        <label for="biaya_almamater" class="form-label">Biaya Almamater Disetor ke Kampus</label>
+        <input type="number" id="biaya_almamater" name="biaya_almamater" min="0" step="1" class="form-control @error('biaya_almamater') is-invalid @enderror" value="{{ old('biaya_almamater', $biayaKampus->biaya_almamater ?? 0) }}">
+        @error('biaya_almamater')<div class="invalid-feedback">{{ $message }}</div>@enderror
+    </div>
+
+    <div class="col-12 d-flex align-items-end">
         <div class="form-check form-switch">
             <input type="hidden" name="status_aktif" value="0">
             <input class="form-check-input" type="checkbox" id="status_aktif" name="status_aktif" value="1" @checked(old('status_aktif', $biayaKampus->status_aktif ?? true))>

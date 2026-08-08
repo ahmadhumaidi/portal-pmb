@@ -4,6 +4,15 @@
 
 @section('logout-route', route('portal.koordinator.logout'))
 
+@php
+    $statusBadgeClass = [
+        'Lunas' => 'bg-emerald-100 text-emerald-700',
+        'Menunggu Verifikasi' => 'bg-amber-100 text-amber-700',
+        'Belum Bayar' => 'bg-slate-100 text-slate-600',
+        'Belum Lunas' => 'bg-slate-100 text-slate-600',
+    ];
+@endphp
+
 @section('content')
     @if(($pengumumans ?? collect())->isNotEmpty())
         <div class="portal-card rounded-2xl bg-white p-6 mb-6">
@@ -46,6 +55,9 @@
                         <th class="px-4 py-3">NIM</th>
                         <th class="px-4 py-3">No. Seri Ijazah</th>
                         <th class="px-4 py-3">PDDIKTI</th>
+                        <th class="px-4 py-3">Biaya Pendidikan</th>
+                        <th class="px-4 py-3">Wisuda</th>
+                        <th class="px-4 py-3">Almamater</th>
                         <th class="px-4 py-3">Dokumen</th>
                     </tr>
                 </thead>
@@ -68,6 +80,15 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-black {{ $statusBadgeClass[$mahasiswa->statusBiayaPendidikan()] }}">{{ $mahasiswa->statusBiayaPendidikan() }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-black {{ $statusBadgeClass[$mahasiswa->statusPembayaranJenis('Wisuda')] }}">{{ $mahasiswa->statusPembayaranJenis('Wisuda') }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-black {{ $statusBadgeClass[$mahasiswa->statusPembayaranJenis('Almamater')] }}">{{ $mahasiswa->statusPembayaranJenis('Almamater') }}</span>
+                            </td>
+                            <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-1.5">
                                     @foreach(['scan_ijazah' => 'Ijazah', 'scan_transkrip' => 'Transkrip', 'screenshot_pisn' => 'PISN'] as $field => $label)
                                         @php $path = match($field) { 'scan_ijazah' => $hasil?->scan_ijazah_path, 'scan_transkrip' => $hasil?->scan_transkrip_path, 'screenshot_pisn' => $hasil?->screenshot_pisn_path }; @endphp
@@ -83,7 +104,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center font-semibold text-slate-500">Belum ada mahasiswa.</td>
+                            <td colspan="10" class="px-4 py-8 text-center font-semibold text-slate-500">Belum ada mahasiswa.</td>
                         </tr>
                     @endforelse
                 </tbody>

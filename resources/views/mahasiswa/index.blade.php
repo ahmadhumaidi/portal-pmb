@@ -16,7 +16,7 @@
                 <i class="bi bi-trash me-1"></i>
                 Sampah
             </a>
-            <a href="{{ route('mahasiswa.create') }}" class="btn btn-primary">
+            <a href="{{ route('mahasiswa.create') }}{{ request()->getQueryString() ? '?back=' . urlencode(request()->getQueryString()) : '' }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>
                 Tambah Mahasiswa
             </a>
@@ -24,11 +24,23 @@
     </div>
 
     <div class="card-body">
+        @php
+            $backQuery = request()->getQueryString();
+            $backParam = $backQuery ? '?back=' . urlencode($backQuery) : '';
+        @endphp
         <form method="GET" action="{{ route('mahasiswa.index') }}" class="row g-2 mb-4">
-            <div class="col-md-7">
+            <div class="col-md-5">
                 <input type="search" name="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Cari nama, kode PMB, NIK, NISN, ibu, sekolah, email, atau whatsapp...">
             </div>
             <div class="col-md-3">
+                <select name="kampus_id" class="form-select">
+                    <option value="">Semua kampus</option>
+                    @foreach ($kampuses as $kampus)
+                        <option value="{{ $kampus->id }}" @selected((string) ($kampusId ?? '') === (string) $kampus->id)>{{ $kampus->nama_kampus }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
                 <select name="status" class="form-select">
                     <option value="">Semua status</option>
                     @foreach ($statuses as $option)
@@ -73,7 +85,7 @@
                             <td class="{{ $kewajibanKampus !== null && $kewajibanKampus > 0 ? 'text-danger' : 'text-success' }} fw-semibold">{{ $kewajibanKampus !== null ? 'Rp ' . number_format($kewajibanKampus, 0, ',', '.') : '-' }}</td>
                             <td><span class="badge text-bg-info">{{ ucfirst(str_replace('_', ' ', $mahasiswa->status_pendaftaran)) }}</span></td>
                             <td class="d-flex gap-1">
-                                <a href="{{ route('mahasiswa.show', $mahasiswa) }}" class="btn btn-sm btn-outline-primary">Detail</a>
+                                <a href="{{ route('mahasiswa.show', $mahasiswa) }}{{ $backParam }}" class="btn btn-sm btn-outline-primary">Detail</a>
                                 <form action="{{ route('mahasiswa.destroy', $mahasiswa) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus data mahasiswa ini? Berkas dan pembayaran yang terkait akan ikut terhapus.')">
                                     @csrf
                                     @method('DELETE')

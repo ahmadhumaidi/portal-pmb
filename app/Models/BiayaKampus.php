@@ -19,12 +19,16 @@ class BiayaKampus extends Model
         'kampus_id',
         'jurusan_id',
         'biaya',
+        'biaya_wisuda',
+        'biaya_almamater',
         'keterangan',
         'status_aktif',
     ];
 
     protected $casts = [
         'biaya' => 'decimal:2',
+        'biaya_wisuda' => 'decimal:2',
+        'biaya_almamater' => 'decimal:2',
         'status_aktif' => 'boolean',
     ];
 

@@ -119,13 +119,27 @@ class Mahasiswa extends Authenticatable
         return $this->hasOne(Hasil::class);
     }
 
-    public function resolvedBiayaKampus(): ?float
+    private bool $aturanBiayaKampusResolved = false;
+
+    private ?\Illuminate\Support\Collection $aturanBiayaKampusCache = null;
+
+    /**
+     * All active Biaya Kampus rules that apply to this mahasiswa, ordered with the
+     * jurusan-specific rule first and the "Semua Prodi" (jurusan_id null) rule last.
+     */
+    private function resolvedAturanBiayaKampusCollection(): \Illuminate\Support\Collection
     {
-        if (!$this->kampus_id) {
-            return null;
+        if ($this->aturanBiayaKampusResolved) {
+            return $this->aturanBiayaKampusCache;
         }
 
-        $aturan = BiayaKampus::query()
+        $this->aturanBiayaKampusResolved = true;
+
+        if (!$this->kampus_id) {
+            return $this->aturanBiayaKampusCache = collect();
+        }
+
+        return $this->aturanBiayaKampusCache = BiayaKampus::query()
             ->where('kampus_id', $this->kampus_id)
             ->where('status_aktif', true)
             ->where(function ($query) {
@@ -133,13 +147,52 @@ class Mahasiswa extends Authenticatable
                     ->orWhereNull('jurusan_id');
             })
             ->orderByRaw('jurusan_id is null')
-            ->first();
+            ->get();
+    }
 
-        if ($aturan) {
-            return (float) $aturan->biaya;
+    public function resolvedAturanBiayaKampus(): ?BiayaKampus
+    {
+        return $this->resolvedAturanBiayaKampusCollection()->first();
+    }
+
+    public function resolvedBiayaKampus(): ?float
+    {
+        $biaya = $this->resolvedBiayaKampusField('biaya');
+
+        if ($biaya !== null && $biaya > 0) {
+            return $biaya;
         }
 
-        return $this->kampus ? (float) $this->kampus->harga : null;
+        return $this->kampus ? (float) $this->kampus->harga : $biaya;
+    }
+
+    /**
+     * Resolve a fee column (e.g. biaya_wisuda) from the jurusan-specific rule first,
+     * falling back to the "Semua Prodi" rule when the specific rule has it at 0 —
+     * this lets Wisuda/Almamater be set once for all prodi even when each prodi has
+     * its own tuition rule.
+     */
+    private function resolvedBiayaKampusField(string $column): ?float
+    {
+        $aturans = $this->resolvedAturanBiayaKampusCollection();
+
+        if ($aturans->isEmpty()) {
+            return null;
+        }
+
+        $withValue = $aturans->first(fn (BiayaKampus $aturan) => (float) $aturan->{$column} > 0);
+
+        return (float) ($withValue ?? $aturans->first())->{$column};
+    }
+
+    public function resolvedBiayaWisuda(): ?float
+    {
+        return $this->resolvedBiayaKampusField('biaya_wisuda');
+    }
+
+    public function resolvedBiayaAlmamater(): ?float
+    {
+        return $this->resolvedBiayaKampusField('biaya_almamater');
     }
 
     public function keuntungan(): ?float
@@ -156,6 +209,7 @@ class Mahasiswa extends Authenticatable
     public function totalDibayarMahasiswa(): float
     {
         return (float) $this->pembayarans
+            ->where('jenis_pembayaran', 'Angsuran')
             ->where('status_bayar', 'terverifikasi')
             ->sum('nominal');
     }
@@ -170,20 +224,84 @@ class Mahasiswa extends Authenticatable
         return $this->totalTagihan() <= 0;
     }
 
+    public function statusPembayaranJenis(string $jenis): string
+    {
+        $pembayarans = $this->pembayarans->where('jenis_pembayaran', $jenis);
+
+        if ($pembayarans->where('status_bayar', 'terverifikasi')->isNotEmpty()) {
+            return 'Lunas';
+        }
+
+        if ($pembayarans->where('status_bayar', 'menunggu')->isNotEmpty()) {
+            return 'Menunggu Verifikasi';
+        }
+
+        return 'Belum Bayar';
+    }
+
+    public function statusBiayaPendidikan(): string
+    {
+        if ($this->sudahLunas()) {
+            return 'Lunas';
+        }
+
+        $adaMenunggu = $this->pembayarans
+            ->where('jenis_pembayaran', 'Angsuran')
+            ->where('status_bayar', 'menunggu')
+            ->isNotEmpty();
+
+        return $adaMenunggu ? 'Menunggu Verifikasi' : 'Belum Lunas';
+    }
+
+    public function totalSetorKampusJenis(string $jenis): float
+    {
+        return (float) $this->setoranKampus
+            ->where('jenis_setoran', $jenis)
+            ->sum('nominal');
+    }
+
     public function totalSetorKampus(): float
     {
-        return (float) $this->setoranKampus->sum('nominal');
+        return $this->totalSetorKampusJenis('Biaya Pendidikan');
+    }
+
+    public function targetBiayaKampusJenis(string $jenis): ?float
+    {
+        return match ($jenis) {
+            'Wisuda' => $this->resolvedBiayaWisuda(),
+            'Almamater' => $this->resolvedBiayaAlmamater(),
+            default => $this->resolvedBiayaKampus(),
+        };
+    }
+
+    /**
+     * Almamater is an optional add-on — students may or may not buy one. A mahasiswa
+     * only "opts in" once they have an actual Almamater payment record, so campus
+     * obligation for it shouldn't be treated as arrears until then.
+     */
+    public function sudahOptInAlmamater(): bool
+    {
+        return $this->pembayarans->where('jenis_pembayaran', 'Almamater')->isNotEmpty();
+    }
+
+    public function kewajibanKampusJenis(string $jenis): ?float
+    {
+        if ($jenis === 'Almamater' && !$this->sudahOptInAlmamater()) {
+            return null;
+        }
+
+        $target = $this->targetBiayaKampusJenis($jenis);
+
+        if ($target === null) {
+            return null;
+        }
+
+        return $target - $this->totalSetorKampusJenis($jenis);
     }
 
     public function kewajibanKampus(): ?float
     {
-        $biayaKampus = $this->resolvedBiayaKampus();
-
-        if ($biayaKampus === null) {
-            return null;
-        }
-
-        return $biayaKampus - $this->totalSetorKampus();
+        return $this->kewajibanKampusJenis('Biaya Pendidikan');
     }
 }
 
