@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hasil;
+use App\Models\Kampus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -26,6 +27,7 @@ class HasilController extends Controller
     {
         $search = trim((string) $request->query('search'));
         $status = $request->query('status');
+        $kampusId = $request->query('kampus_id');
 
         $hasils = Hasil::query()
             ->select('hasils.*')
@@ -49,16 +51,17 @@ class HasilController extends Controller
                 });
             })
             ->when($status, fn ($query) => $query->where('hasils.status_kirim', $status))
+            ->when($kampusId, fn ($query) => $query->where('mahasiswas.kampus_id', $kampusId))
             ->orderBy('mahasiswas.kode_pmb')
             ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         $statuses = $this->statuses;
         $kelulusanStatuses = $this->kelulusanStatuses;
+        $kampuses = Kampus::query()->where('status_aktif', true)->orderBy('nama_kampus')->get();
 
-        return view('hasil.index', compact('hasils', 'search', 'status', 'statuses', 'kelulusanStatuses'));
+        return view('hasil.index', compact('hasils', 'search', 'status', 'kampusId', 'kampuses', 'statuses', 'kelulusanStatuses'));
     }
-
     public function show(Hasil $hasil): View
     {
         $hasil->load(['mahasiswa.kampus', 'mahasiswa.jurusan', 'mahasiswa.pembayarans', 'inputBy']);
