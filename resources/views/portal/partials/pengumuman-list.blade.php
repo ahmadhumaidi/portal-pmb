@@ -4,10 +4,13 @@
         <div class="mt-3 divide-y divide-amber-100 overflow-hidden rounded-xl border border-amber-100 bg-amber-50">
             @foreach($pengumumans as $pengumuman)
                 <button type="button"
-                    class="js-pengumuman-open flex w-full items-center justify-between gap-4 px-4 py-3 text-left font-black text-slate-900 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    class="js-pengumuman-open flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-slate-900 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                     data-pengumuman-target="pengumuman-modal-{{ $pengumuman->id }}">
-                    <span>{{ $pengumuman->judul }}</span>
-                    <span class="text-xs font-bold uppercase tracking-wide text-emerald-700">Buka</span>
+                    <span class="min-w-0">
+                        <span class="block font-black">{{ $pengumuman->judul }}</span>
+                        <span class="mt-1 block text-xs font-bold text-slate-400">{{ ($pengumuman->tanggal ?? $pengumuman->created_at)->translatedFormat('d M Y') }}</span>
+                    </span>
+                    <span class="shrink-0 text-xs font-bold uppercase tracking-wide text-emerald-700">Buka</span>
                 </button>
             @endforeach
         </div>
