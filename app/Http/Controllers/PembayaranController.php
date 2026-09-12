@@ -25,33 +25,25 @@ class PembayaranController extends Controller
     public function index(Request $request): View
     {
         $search = trim((string) $request->query('search'));
-        $status = $request->query('status');
 
-        $pembayarans = Pembayaran::query()
-            ->with(['mahasiswa.kampus', 'mahasiswa.jurusan'])
+        $mahasiswas = Mahasiswa::query()
+            ->with(['kampus', 'jurusan', 'pembayarans', 'setoranKampus'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
-                        ->where('kode_pembayaran', 'like', "%{$search}%")
-                        ->orWhere('jenis_pembayaran', 'like', "%{$search}%")
-                        ->orWhere('bukti_bayar_path', 'like', "%{$search}%")
-                        ->orWhere('catatan', 'like', "%{$search}%")
-                        ->orWhereHas('mahasiswa', function ($mahasiswaQuery) use ($search) {
-                            $mahasiswaQuery
-                                ->where('nama_mahasiswa', 'like', "%{$search}%")
-                                ->orWhere('kode_pmb', 'like', "%{$search}%")
-                                ->orWhere('nik', 'like', "%{$search}%");
-                        });
+                        ->where('nama_mahasiswa', 'like', "%{$search}%")
+                        ->orWhere('kode_pmb', 'like', "%{$search}%")
+                        ->orWhere('nik', 'like', "%{$search}%")
+                        ->orWhere('nomor_whatsapp', 'like', "%{$search}%")
+                        ->orWhereHas('kampus', fn ($kampusQuery) => $kampusQuery->where('nama_kampus', 'like', "%{$search}%"))
+                        ->orWhereHas('jurusan', fn ($jurusanQuery) => $jurusanQuery->where('nama_jurusan', 'like', "%{$search}%"));
                 });
             })
-            ->when($status, fn ($query) => $query->where('status_bayar', $status))
-            ->latest('tanggal_bayar')
+            ->orderBy('nama_mahasiswa')
             ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
-        $statuses = $this->statuses;
-
-        return view('pembayaran.index', compact('pembayarans', 'search', 'status', 'statuses'));
+        return view('pembayaran.index', compact('mahasiswas', 'search'));
     }
 
     public function create(Request $request): View
