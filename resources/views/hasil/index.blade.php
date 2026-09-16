@@ -16,8 +16,8 @@
 <div class="card dashboard-card border-0"><div class="card-header flex-wrap gap-3"><div><h5>Daftar Hasil</h5><small>Status NIM, ijazah, dokumen, dan pengiriman hasil mahasiswa &mdash; klik Edit untuk ubah baris</small></div></div><div class="card-body">
 <form method="GET" action="{{ route('hasil.index') }}" class="row g-2 mb-4">
     <div class="col-md-4"><input type="search" name="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Cari kode, nama, NIM, seri ijazah, status, atau link..."></div>
-    <div class="col-md-2"><select name="kampus_id" class="form-select"><option value="">Semua kampus</option>@foreach ($kampuses as $kampus)<option value="{{ $kampus->id }}" @selected((string) ($kampusId ?? '') === (string) $kampus->id)>{{ $kampus->nama_kampus }}</option>@endforeach</select></div>
-    <div class="col-md-2"><select name="jurusan_id" class="form-select"><option value="">Semua prodi</option>@foreach ($jurusans as $jurusan)<option value="{{ $jurusan->id }}" @selected((string) ($jurusanId ?? '') === (string) $jurusan->id)>{{ $jurusan->nama_jurusan }}{{ $kampusId ? '' : ' - ' . ($jurusan->kampus->nama_kampus ?? '-') }}</option>@endforeach</select></div>
+    <div class="col-md-2"><select id="hasil-kampus-filter" name="kampus_id" class="form-select"><option value="">Semua kampus</option>@foreach ($kampuses as $kampus)<option value="{{ $kampus->id }}" @selected((string) ($kampusId ?? '') === (string) $kampus->id)>{{ $kampus->nama_kampus }}</option>@endforeach</select></div>
+    <div class="col-md-2"><select id="hasil-jurusan-filter" name="jurusan_id" class="form-select"><option value="">Semua prodi</option>@foreach ($jurusans as $jurusan)<option value="{{ $jurusan->id }}" data-kampus-id="{{ $jurusan->kampus_id }}" data-prodi-label="{{ $jurusan->nama_jurusan }}" data-full-label="{{ $jurusan->nama_jurusan }} - {{ $jurusan->kampus->nama_kampus ?? '-' }}" @selected((string) ($jurusanId ?? '') === (string) $jurusan->id)>{{ $kampusId ? $jurusan->nama_jurusan : $jurusan->nama_jurusan . ' - ' . ($jurusan->kampus->nama_kampus ?? '-') }}</option>@endforeach</select></div>
     <div class="col-md-2"><select name="status" class="form-select"><option value="">Semua status kirim</option>@foreach ($statuses as $option)<option value="{{ $option }}" @selected(($status ?? '') === $option)>{{ ucfirst(str_replace('_', ' ', $option)) }}</option>@endforeach</select></div>
     <div class="col-md-2 d-flex gap-2"><button class="btn btn-outline-primary" type="submit">Cari</button><a href="{{ route('hasil.index') }}" class="btn btn-outline-secondary">Reset</a></div>
 </form>
@@ -118,6 +118,37 @@
 @endforeach
 
 <script>
+    function syncHasilJurusanFilter() {
+        const kampusSelect = document.getElementById('hasil-kampus-filter');
+        const jurusanSelect = document.getElementById('hasil-jurusan-filter');
+
+        if (!kampusSelect || !jurusanSelect) {
+            return;
+        }
+
+        const selectedKampus = kampusSelect.value;
+
+        Array.from(jurusanSelect.options).forEach((option) => {
+            if (!option.value) {
+                option.hidden = false;
+                option.textContent = 'Semua prodi';
+                return;
+            }
+
+            const matchesKampus = !selectedKampus || option.dataset.kampusId === selectedKampus;
+            option.hidden = !matchesKampus;
+            option.disabled = !matchesKampus;
+            option.textContent = selectedKampus ? option.dataset.prodiLabel : option.dataset.fullLabel;
+        });
+
+        const selectedOption = jurusanSelect.selectedOptions[0];
+        if (selectedOption?.hidden) {
+            jurusanSelect.value = '';
+        }
+    }
+
+    document.getElementById('hasil-kampus-filter')?.addEventListener('change', syncHasilJurusanFilter);
+    syncHasilJurusanFilter();
     function setHasilRowEditing(row, editing) {
         row.querySelectorAll('.js-view').forEach((el) => el.classList.toggle('d-none', editing));
         row.querySelectorAll('.js-edit').forEach((el) => el.classList.toggle('d-none', !editing));

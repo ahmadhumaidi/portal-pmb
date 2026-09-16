@@ -65,7 +65,6 @@ class HasilController extends Controller
         $jurusans = Jurusan::query()
             ->with('kampus:id,nama_kampus')
             ->where('status_aktif', true)
-            ->when($kampusId, fn ($query) => $query->where('kampus_id', $kampusId))
             ->orderBy('nama_jurusan')
             ->get();
 
