@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Hasil;
 use App\Models\Kampus;
+use App\Models\Jurusan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -28,6 +29,7 @@ class HasilController extends Controller
         $search = trim((string) $request->query('search'));
         $status = $request->query('status');
         $kampusId = $request->query('kampus_id');
+        $jurusanId = $request->query('jurusan_id');
 
         $hasils = Hasil::query()
             ->select('hasils.*')
@@ -52,6 +54,7 @@ class HasilController extends Controller
             })
             ->when($status, fn ($query) => $query->where('hasils.status_kirim', $status))
             ->when($kampusId, fn ($query) => $query->where('mahasiswas.kampus_id', $kampusId))
+            ->when($jurusanId, fn ($query) => $query->where('mahasiswas.jurusan_id', $jurusanId))
             ->orderBy('mahasiswas.kode_pmb')
             ->paginate($this->resolvePerPage($request))
             ->withQueryString();
@@ -59,8 +62,14 @@ class HasilController extends Controller
         $statuses = $this->statuses;
         $kelulusanStatuses = $this->kelulusanStatuses;
         $kampuses = Kampus::query()->where('status_aktif', true)->orderBy('nama_kampus')->get();
+        $jurusans = Jurusan::query()
+            ->with('kampus:id,nama_kampus')
+            ->where('status_aktif', true)
+            ->when($kampusId, fn ($query) => $query->where('kampus_id', $kampusId))
+            ->orderBy('nama_jurusan')
+            ->get();
 
-        return view('hasil.index', compact('hasils', 'search', 'status', 'kampusId', 'kampuses', 'statuses', 'kelulusanStatuses'));
+        return view('hasil.index', compact('hasils', 'search', 'status', 'kampusId', 'jurusanId', 'kampuses', 'jurusans', 'statuses', 'kelulusanStatuses'));
     }
     public function show(Hasil $hasil): View
     {
