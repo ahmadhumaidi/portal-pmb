@@ -17,7 +17,7 @@
 <form method="GET" action="{{ route('hasil.index') }}" class="row g-2 mb-4"><div class="col-md-5"><input type="search" name="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Cari kode, nama, NIM, seri ijazah, status, atau link..."></div><div class="col-md-2"><select name="kampus_id" class="form-select"><option value="">Semua kampus</option>@foreach ($kampuses as $kampus)<option value="{{ $kampus->id }}" @selected((string) ($kampusId ?? '') === (string) $kampus->id)>{{ $kampus->nama_kampus }}</option>@endforeach</select></div><div class="col-md-3"><select name="status" class="form-select"><option value="">Semua status kirim</option>@foreach ($statuses as $option)<option value="{{ $option }}" @selected(($status ?? '') === $option)>{{ ucfirst(str_replace('_', ' ', $option)) }}</option>@endforeach</select></div><div class="col-md-2 d-flex gap-2"><button class="btn btn-outline-primary" type="submit">Cari</button><a href="{{ route('hasil.index') }}" class="btn btn-outline-secondary">Reset</a></div></form>
 <div class="table-responsive"><table class="table align-middle"><thead><tr><th>No.</th><th>Kode</th><th>Mahasiswa</th><th style="min-width:140px">Status</th><th style="min-width:120px">NIM</th><th style="min-width:120px">No. Seri</th><th style="min-width:150px">PISN</th><th style="min-width:150px">Link PDDIKTI</th><th style="min-width:150px">Ijazah</th><th style="min-width:150px">Transkrip</th><th style="min-width:160px">Wisuda</th><th style="min-width:160px">Almamater</th><th style="min-width:150px">Status Kirim</th><th></th></tr></thead><tbody>
 @forelse ($hasils as $hasil)
-<tr class="js-hasil-row" data-row-id="{{ $hasil->id }}">
+<tr id="hasil-row-{{ $hasil->id }}" class="js-hasil-row" data-row-id="{{ $hasil->id }}" style="scroll-margin-top: 110px;">
 <td>{{ $hasils->firstItem() + $loop->index }}</td>
 <td><span class="badge text-bg-light border text-dark">{{ $hasil->kode_hasil }}</span></td>
 <td><div>{{ $hasil->mahasiswa->nama_mahasiswa ?? '-' }}</div><div class="small text-muted">{{ $hasil->mahasiswa->kode_pmb ?? '-' }}</div></td>
@@ -100,6 +100,7 @@
 <form id="hasil-form-{{ $hasil->id }}" method="POST" action="{{ route('hasil.update', $hasil) }}" enctype="multipart/form-data" class="d-none">
     @csrf
     @method('PUT')
+    <input type="hidden" name="return_to" value="{{ request()->fullUrl() }}#hasil-row-{{ $hasil->id }}">
 </form>
 @endforeach
 

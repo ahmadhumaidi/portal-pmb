@@ -118,7 +118,11 @@ class HasilController extends Controller
             'metode_kirim' => ['nullable', 'string', 'max:255'],
             'nomor_resi' => ['nullable', 'string', 'max:255'],
             'keterangan' => ['nullable', 'string'],
+            'return_to' => ['nullable', 'string', 'max:2048'],
         ]);
+
+        $returnTo = $validated['return_to'] ?? null;
+        unset($validated['return_to']);
 
         $hasil->loadMissing('mahasiswa');
         $directory = 'hasil/' . $hasil->mahasiswa->kode_pmb;
@@ -139,6 +143,10 @@ class HasilController extends Controller
 
         $validated['input_by'] = auth()->id();
         $hasil->update($validated);
+
+        if ($returnTo && str_starts_with($returnTo, $request->getSchemeAndHttpHost())) {
+            return redirect()->to($returnTo)->with('success', 'Hasil mahasiswa berhasil diperbarui.');
+        }
 
         return redirect()->back()->with('success', 'Hasil mahasiswa berhasil diperbarui.');
     }
