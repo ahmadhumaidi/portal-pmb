@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Jurusan;
+use App\Models\Kampus;
 use App\Models\Mahasiswa;
 use App\Models\Pembayaran;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +27,8 @@ class PembayaranController extends Controller
     public function index(Request $request): View
     {
         $search = trim((string) $request->query('search'));
+        $kampusId = $request->query('kampus_id');
+        $jurusanId = $request->query('jurusan_id');
 
         $mahasiswas = Mahasiswa::query()
             ->with(['kampus', 'jurusan', 'pembayarans', 'setoranKampus'])
@@ -39,11 +43,20 @@ class PembayaranController extends Controller
                         ->orWhereHas('jurusan', fn ($jurusanQuery) => $jurusanQuery->where('nama_jurusan', 'like', "%{$search}%"));
                 });
             })
+            ->when($kampusId, fn ($query) => $query->where('kampus_id', $kampusId))
+            ->when($jurusanId, fn ($query) => $query->where('jurusan_id', $jurusanId))
             ->orderBy('nama_mahasiswa')
             ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
-        return view('pembayaran.index', compact('mahasiswas', 'search'));
+        $kampuses = Kampus::query()->where('status_aktif', true)->orderBy('nama_kampus')->get();
+        $jurusans = Jurusan::query()
+            ->with('kampus:id,nama_kampus')
+            ->where('status_aktif', true)
+            ->orderBy('nama_jurusan')
+            ->get();
+
+        return view('pembayaran.index', compact('mahasiswas', 'search', 'kampusId', 'jurusanId', 'kampuses', 'jurusans'));
     }
 
     public function create(Request $request): View

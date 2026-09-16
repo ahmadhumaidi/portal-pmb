@@ -22,10 +22,26 @@
     </div>
     <div class="card-body">
         <form method="GET" action="{{ route('pembayaran.index') }}" class="row g-2 mb-4">
-            <div class="col-md-9">
-                <input type="search" name="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Cari kode PMB, nama, NIK, WhatsApp, kampus, atau jurusan...">
+            <div class="col-md-4">
+                <input type="search" name="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Cari kode PMB, nama, NIK, WhatsApp...">
             </div>
-            <div class="col-md-3 d-flex gap-2">
+            <div class="col-md-2">
+                <select id="pembayaran-kampus-filter" name="kampus_id" class="form-select">
+                    <option value="">Semua kampus</option>
+                    @foreach ($kampuses as $kampus)
+                        <option value="{{ $kampus->id }}" @selected((string) ($kampusId ?? '') === (string) $kampus->id)>{{ $kampus->nama_kampus }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="pembayaran-jurusan-filter" name="jurusan_id" class="form-select">
+                    <option value="">Semua prodi</option>
+                    @foreach ($jurusans as $jurusan)
+                        <option value="{{ $jurusan->id }}" data-kampus-id="{{ $jurusan->kampus_id }}" data-prodi-label="{{ $jurusan->nama_jurusan }}" data-full-label="{{ $jurusan->nama_jurusan }} - {{ $jurusan->kampus->nama_kampus ?? '-' }}" @selected((string) ($jurusanId ?? '') === (string) $jurusan->id)>{{ $kampusId ? $jurusan->nama_jurusan : $jurusan->nama_jurusan . ' - ' . ($jurusan->kampus->nama_kampus ?? '-') }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
                 <button class="btn btn-outline-primary" type="submit">Cari</button>
                 <a href="{{ route('pembayaran.index') }}" class="btn btn-outline-secondary">Reset</a>
             </div>
@@ -98,4 +114,38 @@
         </div>
     </div>
 </div>
+<script>
+    function syncPembayaranJurusanFilter() {
+        const kampusSelect = document.getElementById('pembayaran-kampus-filter');
+        const jurusanSelect = document.getElementById('pembayaran-jurusan-filter');
+
+        if (!kampusSelect || !jurusanSelect) {
+            return;
+        }
+
+        const selectedKampus = kampusSelect.value;
+
+        Array.from(jurusanSelect.options).forEach((option) => {
+            if (!option.value) {
+                option.hidden = false;
+                option.disabled = false;
+                option.textContent = 'Semua prodi';
+                return;
+            }
+
+            const matchesKampus = !selectedKampus || option.dataset.kampusId === selectedKampus;
+            option.hidden = !matchesKampus;
+            option.disabled = !matchesKampus;
+            option.textContent = selectedKampus ? option.dataset.prodiLabel : option.dataset.fullLabel;
+        });
+
+        const selectedOption = jurusanSelect.selectedOptions[0];
+        if (selectedOption?.hidden || selectedOption?.disabled) {
+            jurusanSelect.value = '';
+        }
+    }
+
+    document.getElementById('pembayaran-kampus-filter')?.addEventListener('change', syncPembayaranJurusanFilter);
+    syncPembayaranJurusanFilter();
+</script>
 @endsection
