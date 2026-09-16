@@ -61,7 +61,7 @@
             </div>
 
             <div class="col-md-6"><label for="tanggal_bayar" class="form-label">Tanggal Bayar</label><input type="date" id="tanggal_bayar" name="tanggal_bayar" class="form-control" value="{{ old('tanggal_bayar', now()->toDateString()) }}" required></div>
-            <div class="col-md-6"><label for="status_bayar" class="form-label">Status Bayar</label><select id="status_bayar" name="status_bayar" class="form-select" required>@foreach ($statuses as $option)<option value="{{ $option }}" @selected(old('status_bayar', 'menunggu') === $option)>{{ ucfirst(str_replace('_', ' ', $option)) }}</option>@endforeach</select></div>
+            <div class="col-md-6"><label for="status_bayar" class="form-label">Status Bayar</label><select id="status_bayar" name="status_bayar" class="form-select" required>@foreach ($statuses as $option)<option value="{{ $option }}" @selected(old('status_bayar', 'terverifikasi') === $option)>{{ ucfirst(str_replace('_', ' ', $option)) }}</option>@endforeach</select></div>
             <div class="col-md-6"><label for="bukti_bayar" class="form-label">Bukti Bayar dari Mahasiswa</label><input type="file" id="bukti_bayar" name="bukti_bayar" class="form-control"></div>
             <div class="col-12"><label for="catatan" class="form-label">Catatan</label><textarea id="catatan" name="catatan" rows="3" class="form-control">{{ old('catatan') }}</textarea></div>
         </div>
