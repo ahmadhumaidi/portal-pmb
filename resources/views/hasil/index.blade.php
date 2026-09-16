@@ -48,7 +48,14 @@
 
 <td>
     <span class="js-view">@if ($hasil->screenshot_pisn_path)<i class="bi bi-check-circle-fill text-success"></i> Sudah ada@else<span class="text-muted">-</span>@endif</span>
-    <input form="hasil-form-{{ $hasil->id }}" type="file" name="screenshot_pisn" class="form-control form-control-sm js-edit d-none">
+    <div class="js-edit d-none">
+        <div class="border rounded-2 bg-light text-muted small text-center p-2 js-pisn-paste" tabindex="0" role="button" data-input-id="screenshot-pisn-{{ $hasil->id }}" style="min-width: 150px; cursor: text;">
+            <span class="js-pisn-empty">Paste gambar PISN<br><span class="text-muted">Ctrl+V di sini</span></span>
+            <img class="img-fluid rounded d-none js-pisn-preview" alt="Preview PISN" style="max-height: 70px; object-fit: contain;">
+            <div class="text-success fw-semibold d-none js-pisn-ready">Gambar siap disimpan</div>
+        </div>
+        <input id="screenshot-pisn-{{ $hasil->id }}" form="hasil-form-{{ $hasil->id }}" type="file" name="screenshot_pisn" accept="image/*" class="visually-hidden js-pisn-input" tabindex="-1">
+    </div>
 </td>
 
 <td>
@@ -119,7 +126,32 @@
         row.querySelector('.js-hasil-save')?.classList.toggle('d-none', !editing);
     }
 
+    function setPisnPreview(input, file) {
+        const row = input.closest('.js-hasil-row');
+        const area = row?.querySelector(`.js-pisn-paste[data-input-id="${input.id}"]`);
+        const empty = area?.querySelector('.js-pisn-empty');
+        const ready = area?.querySelector('.js-pisn-ready');
+        const preview = area?.querySelector('.js-pisn-preview');
+
+        if (!area || !file) {
+            return;
+        }
+
+        empty?.classList.add('d-none');
+        ready?.classList.remove('d-none');
+
+        if (preview) {
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('d-none');
+        }
+    }
+
     document.addEventListener('click', function (event) {
+        const pasteArea = event.target.closest('.js-pisn-paste');
+        if (pasteArea) {
+            pasteArea.focus();
+        }
+
         const row = event.target.closest('.js-hasil-row');
         if (!row) {
             return;
@@ -130,6 +162,44 @@
         } else if (event.target.matches('.js-hasil-cancel')) {
             setHasilRowEditing(row, false);
         }
+    });
+
+    document.addEventListener('paste', function (event) {
+        const pasteArea = event.target.closest('.js-pisn-paste');
+        if (!pasteArea) {
+            return;
+        }
+
+        const imageItem = Array.from(event.clipboardData?.items || [])
+            .find((item) => item.kind === 'file' && item.type.startsWith('image/'));
+
+        if (!imageItem) {
+            return;
+        }
+
+        const input = document.getElementById(pasteArea.dataset.inputId);
+        const file = imageItem.getAsFile();
+
+        if (!input || !file) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const extension = file.type.split('/')[1] || 'png';
+        const pastedFile = new File([file], `pisn-${Date.now()}.${extension}`, { type: file.type });
+        const transfer = new DataTransfer();
+        transfer.items.add(pastedFile);
+        input.files = transfer.files;
+        setPisnPreview(input, pastedFile);
+    });
+
+    document.addEventListener('change', function (event) {
+        if (!event.target.matches('.js-pisn-input')) {
+            return;
+        }
+
+        setPisnPreview(event.target, event.target.files?.[0]);
     });
 </script>
 @endsection
