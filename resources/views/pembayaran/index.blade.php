@@ -64,11 +64,20 @@
                 <tbody>
                     @forelse ($mahasiswas as $mahasiswa)
                         @php
-                            $kewajibanMahasiswa = (float) $mahasiswa->harga_kesepakatan;
-                            $sudahTerbayar = $mahasiswa->totalDibayarMahasiswa();
-                            $kekuranganMahasiswa = $mahasiswa->totalTagihan();
-                            $sudahDisetorKampus = $mahasiswa->totalSetorKampus();
-                            $kekuranganSetorKampus = $mahasiswa->kewajibanKampus();
+                            $biayaWisuda = (float) ($mahasiswa->resolvedBiayaWisuda() ?? 0);
+                            $kewajibanMahasiswa = (float) $mahasiswa->harga_kesepakatan + $biayaWisuda;
+                            $sudahTerbayar = (float) $mahasiswa->pembayarans
+                                ->whereIn('jenis_pembayaran', ['Angsuran', 'Wisuda'])
+                                ->where('status_bayar', 'terverifikasi')
+                                ->sum('nominal');
+                            $kekuranganMahasiswa = max(0, $kewajibanMahasiswa - $sudahTerbayar);
+                            $sudahDisetorKampus = $mahasiswa->totalSetorKampus()
+                                + $mahasiswa->totalSetorKampusJenis('Wisuda');
+                            $kekuranganPendidikan = $mahasiswa->kewajibanKampus();
+                            $kekuranganWisuda = $mahasiswa->kewajibanKampusJenis('Wisuda');
+                            $kekuranganSetorKampus = $kekuranganPendidikan === null
+                                ? null
+                                : max(0, $kekuranganPendidikan + ($kekuranganWisuda ?? 0));
                         @endphp
                         <tr>
                             <td>{{ $mahasiswas->firstItem() + $loop->index }}</td>
